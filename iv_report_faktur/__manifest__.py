@@ -6,7 +6,6 @@
     'author': 'Indivara Group',
     'maintainer': 'Indivara Group',
     'website': 'https://www.indivaragroup.com/',
-    'license': 'LGPL-3',
     'description': """
         * 2025-02-03
             - Add new wizard to generate report faktur

@@ -1,0 +1,59 @@
+CREATE OR REPLACE FUNCTION public.convert_hour(business_day character varying, qty_hour character varying)
+ RETURNS timestamp without time zone
+ LANGUAGE plpgsql
+AS $function$
+    DECLARE
+        new_datetime timestamp without time zone;
+    BEGIN
+        SELECT CASE
+            WHEN qty_hour = 'qty_1' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '16 hour')::timestamp
+            WHEN qty_hour = 'qty_2' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '17 hour')::timestamp
+            WHEN qty_hour = 'qty_3' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '18 hour')::timestamp
+            WHEN qty_hour = 'qty_4' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '5 hour')::timestamp
+            WHEN qty_hour = 'qty_5' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '4 hour')::timestamp
+            WHEN qty_hour = 'qty_6' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '3 hour')::timestamp
+            WHEN qty_hour = 'qty_7' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '2 hour')::timestamp
+            WHEN qty_hour = 'qty_8' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '1 hour')::timestamp
+            WHEN qty_hour = 'qty_9' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp - interval '0 hour')::timestamp
+            WHEN qty_hour = 'qty_10' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '1 hour')::timestamp
+            WHEN qty_hour = 'qty_11' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '2 hour')::timestamp
+            WHEN qty_hour = 'qty_12' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '3 hour')::timestamp
+            WHEN qty_hour = 'qty_13' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '4 hour')::timestamp
+            WHEN qty_hour = 'qty_14' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '5 hour')::timestamp
+            WHEN qty_hour = 'qty_15' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '6 hour')::timestamp
+            WHEN qty_hour = 'qty_16' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '7 hour')::timestamp
+            WHEN qty_hour = 'qty_17' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '8 hour')::timestamp
+            WHEN qty_hour = 'qty_18' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '9 hour')::timestamp
+            WHEN qty_hour = 'qty_19' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '10 hour')::timestamp
+            WHEN qty_hour = 'qty_20' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '11 hour')::timestamp
+            WHEN qty_hour = 'qty_21' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '12 hour')::timestamp
+            WHEN qty_hour = 'qty_22' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '13 hour')::timestamp
+            WHEN qty_hour = 'qty_23' THEN
+                (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '14 hour')::timestamp
+            ELSE (TO_TIMESTAMP(business_day::float::varchar, 'YYYYMMDD')::timestamp + interval '14 hour 59 minute')::timestamp
+            END INTO new_datetime;
+        RETURN new_datetime;
+    END;
+$function$

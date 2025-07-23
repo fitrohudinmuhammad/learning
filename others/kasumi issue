@@ -1,0 +1,58 @@
+select product_id, product_middleware_id, product_code, product_name_kana, product_name_kanji from master_data_product 
+where product_code in ('10000213', '10000221', '10000230', '10000256');
+
+select product_id, product_middleware_id, product_code, product_name_kana, duplicate_jan from master_data_product 
+where product_code in ('10000019', '10000035', '10000043', '10000051', '10000124', '10000132', '10000159', '10000167', '10000175', '10000183');
+
+select product_id, product_middleware_id, product_code, product_name_kana, duplicate_jan from master_data_product 
+where product_tmpl_id in (124123,78546,80682,77260,59928,75176,98850,68629,133711,31421);
+
+select product_name_kana, product_code from product_master 
+where product_code in ('000019', '000035', '000043', '000051', '000124', '000132', '000159', '000167', '000175', '000183')
+group by product_code, product_name_kana
+
+select product_code, product_name_kana, scanning_code_1 from product_master 
+where product_code in ('000213', '000221', '000230', '000256');
+
+
+select * from product_master limit 1;
+
+select * from receipt_oc limit 1
+
+0272 0273
+
+UPDATE master_data_product SET product_name_kana = '五洋　ケ－キバラ' WHERE product_code = '10000019';
+UPDATE master_data_product SET product_name_kana = '不二家　凍らせちゃいましたカントリーマア' WHERE product_code = '10000035';
+UPDATE master_data_product SET product_name_kana = 'フタバ　柑橘の季節温州みかん＆ゆずレモン' WHERE product_code = '10000043';
+UPDATE master_data_product SET product_name_kana = '森永製菓　クレープあまおう苺' WHERE product_code = '10000051';
+UPDATE master_data_product SET product_name_kana = '不二家　凍らせちゃいましたレアチーズタル' WHERE product_code = '10000124';
+UPDATE master_data_product SET product_name_kana = '茨城県産　イチゴソフト' WHERE product_code = '10000132';
+UPDATE master_data_product SET product_name_kana = '日世　ココットカップ' WHERE product_code = '10000159';
+UPDATE master_data_product SET product_name_kana = 'ハーゲンダッツ　パイントクッキー＆クリー' WHERE product_code = '10000167';
+UPDATE master_data_product SET product_name_kana = '亀印　みやびの梅　１個' WHERE product_code = '10000175';
+UPDATE master_data_product SET product_name_kana = '赤城　もちっとチョコレート' WHERE product_code = '10000183';
+
+ 000221       | ﾌｼﾞﾔﾙﾂｸｱｲｽ(ｱ･ﾗ･ﾓ-ﾄﾞ) | 4902555305592
+ 000256       | ｸﾞﾘｺﾎﾞｸｼﾞｳｼﾎﾞﾘﾊﾞｽｸﾁ- | 4901005319233
+ 000213       | ｱｶｷﾞ ﾌﾞﾗﾂｸ 7ﾎﾝｲﾘ     | 4901170106676
+ 000221       | ｲﾊﾞﾗｷｻﾝ ﾂﾁｳﾗﾉｳｷﾞﾖｳﾉｶ | 0222640000000
+ 000256       | ｲﾊﾞﾗｷｻﾝ ｳｻﾐ ﾖｼﾌﾐﾉｶｼﾞ | 0222643000000
+ 000221       | ｱｲﾕｳ ｼﾞﾕﾝﾏｲｹﾞﾝｼﾕ ﾜﾚﾊ | 4994378134213
+ 000256       | ｾｲｼﾕ ｺｼｶﾞﾔｼﾞﾕｸ ｼﾝﾏｲｼ | 4962418205537
+ 000213       | ﾍﾞｽﾄASﾔｻｲﾀﾂﾌﾟﾘﾆｸﾀﾞﾝｺ |              
+ 000230       | ｲﾊﾞﾗｷｻﾝ JAﾋﾀﾁﾉｶｼﾞﾂ   | 0222641000000
+ 000213       | ｷﾂｺ-ﾏﾝｼﾖｳﾕｷﾞﾌﾄｹﾝ     | 4901515128219
+ 000213       | ｲﾊﾞﾗｷｻﾝ ﾐﾄﾉｳｷﾖｳﾉｶｼﾞﾂ | 0222639000000
+ 000221       | ｷﾂｺ-ﾏﾝｼﾖｳﾕｷﾞﾌﾄｹﾝ     | 4901515117213
+ 000230       | ｸﾗｼｴ ｼﾕｶﾞ-ｺ-ﾝﾍﾞﾘ-&B  | 4901551476428
+ 000230       | ｷﾂｺ-ﾏﾝｼﾖｳﾕｷﾞﾌﾄｹﾝ     | 4901515117237
+ 000256       | ﾎﾞｲﾙﾎﾀﾃｶｲﾊﾞﾗﾊﾝﾊﾞｲ    | 0049472400000
+ 000256       | T ｷﾅﾘﾊﾂｻｸ  2L  F@Oﾊﾞ |              
+ 000230       | ﾔｵｷﾝ ｳﾏｲﾎﾞｳ ｷﾞﾕｳﾀﾝｼｵ | 4513287200000
+     
+     
+SELECT store_code
+                   FROM odoo_server
+                   WHERE url = '10.130.0.35'
+                   GROUP BY store_code, url, port, username, password, database_name
+                   ORDER BY store_code

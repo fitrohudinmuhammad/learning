@@ -1,0 +1,334 @@
+DROP TABLE IF EXISTS deliver_transactions;
+CREATE TABLE deliver_transactions(
+	id bigserial,
+	accounting_date timestamp,
+	quantity float,
+	unit_price float,
+	partner_id int,
+	
+	update_quant boolean,
+    picking_id int,
+    picking_name varchar,
+    move_id int,
+    move_line_id int,
+    location_src_id int,
+    location_dest_id int,
+    picking_type_id int,
+    product_code varchar,
+    uom_id int,
+    procure_method varchar,
+    product_quant_in float,
+    product_quant_out float
+);
+
+DROP FUNCTION IF EXISTS generate_materialized_view_deliver();
+CREATE OR REPLACE FUNCTION public.generate_materialized_view_deliver()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        TRUNCATE deliver_transactions;
+		
+				INSERT INTO deliver_transactions (
+            accounting_date,
+            quantity,
+            unit_price,
+            partner_id,
+            
+            update_quant,
+            picking_id,
+            picking_name,
+            move_id,
+            move_line_id,
+            location_src_id,
+            location_dest_id,
+            picking_type_id,
+            product_code,
+            uom_id,
+            procure_method)
+        SELECT 
+            now(),
+            1,
+            10,
+            12,
+
+            true,
+            nextval('stock_picking_id_seq') as picking_id, 
+            CONCAT('ir_sequence_', lpad(sequence_id::varchar, 3, '0')) as name,
+            nextval('stock_move_id_seq') as move_id, 
+            nextval('stock_move_line_id_seq') as move_line_id,
+            sr.location_src_id, 
+            sr.location_id,
+            sr.picking_type_id,
+            '0000003',
+            1,
+            sr.procure_method
+        FROM stock_warehouse sw 
+        JOIN stock_location_route slr ON slr.id  = sw.delivery_route_id 
+        JOIN stock_rule sr ON sr.route_id = slr.id
+              JOIN stock_picking_type spt ON spt.id = sr.picking_type_id 
+        WHERE sw.company_id = 1 
+                  AND slr.active is true 
+                  AND sr.active is true
+        ORDER BY sr.id;
+
+        PERFORM deliver_main_process();
+
+        -- RETURN NEW;
+	END;
+$$;
+
+DROP FUNCTION IF EXISTS deliver_main_process();
+CREATE OR REPLACE FUNCTION public.deliver_main_process()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        RAISE notice 'Create product on hand: IN PROGRESS..';
+        PERFORM mapping_product_on_hand();
+        RAISE notice 'Create product on hand: FINISH';
+
+        RAISE notice 'Create stock picking: IN PROGRESS..';
+        PERFORM mapping_stock_picking();
+        RAISE notice 'Create stock picking: FINISH';
+
+        -- mapping stock move
+        RAISE notice 'Create stock move: IN PROGRESS..';
+        PERFORM mapping_stock_move();
+        RAISE notice 'Create stock move: FINISH';
+
+        -- mapping stock move line
+        RAISE notice 'Create stock move line: IN PROGRESS..';
+        PERFORM mapping_stock_move_line();
+        RAISE notice 'Create stock move line: FINISH';
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_product_on_hand();
+CREATE OR REPLACE FUNCTION public.mapping_product_on_hand()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    DECLARE
+        quant_in int;
+        quant_out int;
+        dev_tran record;
+    begin
+        FOR dev_tran in select product_code from deliver_transactions
+        LOOP
+            RAISE NOTICE 'PRODUCT : %', dev_tran.product_code;
+
+            SELECT sum(product_uom_qty) FROM stock_move 
+            WHERE product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)  
+                AND location_dest_id in (SELECT 
+                                            default_location_src_id 
+                                        FROM stock_warehouse sw 
+                                        JOIN stock_picking_type spt ON spt.id = sw.out_type_id 
+                                        WHERE sw.company_id = 1)
+                AND state = 'done' INTO quant_in;
+            
+            RAISE NOTICE 'Qty in hand : %', quant_in;
+
+            SELECT sum(product_uom_qty) FROM stock_move 
+            WHERE product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)  
+                AND location_dest_id not in (SELECT 
+                                            default_location_src_id 
+                                        FROM stock_warehouse sw 
+                                        JOIN stock_picking_type spt ON spt.id = sw.out_type_id 
+                                        WHERE sw.company_id = 1)
+                AND state = 'done' INTO quant_out;
+
+            RAISE NOTICE 'Qty out hand : %', quant_out;
+
+            UPDATE deliver_transactions SET product_quant_in = quant_in, product_quant_out = quant_out WHERE product_code = dev_tran.product_code;
+        END LOOP;
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_picking();
+CREATE OR REPLACE FUNCTION public.mapping_stock_picking()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        INSERT INTO stock_picking(
+            id, 
+            name, 
+            origin, 
+            note, 
+            move_type, 
+            scheduled_date,
+            date, 
+            date_done, 
+            location_id, 
+            location_dest_id, 
+            picking_type_id,
+            company_id, 
+            user_id, 
+            state,
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT
+            picking_id,
+            CONCAT(ir.prefix, LPAD(nextval(dt.picking_name)::text, 5, '0')) as name,
+            '',
+            '',
+            dt.procure_method,
+            accounting_date::timestamp,
+            accounting_date::timestamp,
+            accounting_date::timestamp,
+            dt.location_src_id, 
+            dt.location_dest_id, 
+            dt.picking_type_id, 
+            1, 
+            1, 
+            CASE
+                WHEN dt.product_quant_in is null THEN 'confirmed' -- quant minus
+                WHEN (dt.product_quant_in - dt.product_quant_out) = 0 THEN 'confirmed' -- quant = 0
+                WHEN dt.product_quant_in is not null AND dt.product_quant_in != 0 AND dt.procure_method = 'make_to_stock' THEN 'assigned'
+                ELSE 'waiting' END as state,
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM deliver_transactions dt
+        JOIN stock_picking_type spt ON spt.id = dt.picking_type_id
+        JOIN ir_sequence ir ON ir.id = spt.sequence_id;
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_move();
+CREATE OR REPLACE FUNCTION public.mapping_stock_move()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        INSERT INTO stock_move(
+            id, 
+            picking_id, 
+            name, 
+            sequence, 
+            priority, 
+            date, 
+            company_id,
+            product_id, 
+            product_qty, 
+            product_uom_qty, 
+            product_uom,
+            location_id, 
+            location_dest_id,
+            state,
+            price_unit, 
+            origin, 
+            procure_method, 
+            scrapped, 
+            picking_type_id,
+            reference,
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT
+            move_id,
+            picking_id,
+            CASE WHEN pt.default_code IS NULL THEN pt.name
+                ELSE CONCAT('[',pt.default_code,'] ',pt.name) end as name,
+            1, 
+            1, 
+            accounting_date::timestamp, 
+            1,
+            pp.id, 
+            abs(dt.quantity), 
+            abs(dt.quantity), 
+            dt.uom_id,
+            dt.location_src_id, 
+            dt.location_dest_id, 
+            CASE
+                WHEN dt.product_quant_in is null THEN 'confirmed' -- quant minus
+                WHEN (dt.product_quant_in - dt.product_quant_out) = 0 THEN 'confirmed' -- quant = 0
+                WHEN dt.product_quant_in is not null AND dt.product_quant_in != 0 AND dt.procure_method = 'make_to_stock' THEN 'assigned'
+                ELSE 'waiting' END as state,
+            pt.list_price, 
+            sp.origin, 
+            dt.procure_method, 
+            False, 
+            dt.picking_type_id,
+            sp.name,
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM deliver_transactions dt
+        JOIN stock_picking sp ON sp.id = dt.picking_id
+        JOIN product_product pp ON pp.default_code = dt.product_code
+        JOIN product_template pt ON pt.id = pp.product_tmpl_id;
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_move_line();
+CREATE OR REPLACE FUNCTION public.mapping_stock_move_line()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        INSERT INTO stock_move_line(
+            id, 
+            picking_id, 
+            move_id, 
+            company_id, 
+            product_id, 
+            product_uom_id,
+            product_qty, 
+            product_uom_qty, 
+            qty_done, 
+            date, 
+            location_id,
+            location_dest_id, 
+            state, 
+            reference, 
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT
+            move_line_id, 
+            picking_id, 
+            move_id, 
+            1, 
+            pp.id, 
+            dt.uom_id,
+            0, 
+            abs(dt.quantity), 
+            abs(dt.quantity),
+            accounting_date::timestamp,
+            dt.location_src_id, 
+            dt.location_dest_id, 
+            CASE
+                WHEN dt.product_quant_in is null THEN 'confirmed' -- quant minus
+                WHEN (dt.product_quant_in - dt.product_quant_out) = 0 THEN 'confirmed' -- quant = 0
+                WHEN dt.product_quant_in is not null AND dt.product_quant_in != 0 AND dt.procure_method = 'make_to_stock' THEN 'assigned'
+                ELSE 'waiting' END as state,
+            sp.origin,
+
+            1, 
+            now(), 
+            1, 
+            now()
+
+        FROM deliver_transactions dt
+        JOIN stock_picking sp ON sp.id = dt.picking_id
+        JOIN product_product pp ON pp.default_code = dt.product_code; 
+
+    END;
+$$;
+

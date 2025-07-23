@@ -1,0 +1,21 @@
+{
+    'name': 'FTP Integration',
+    'version': '16.0.1.0.1',
+    'summary': """Integration Odoo x FTP&SFTP""",
+    'description': '',
+    "category": "Integration",
+    'author': 'Muhammad Fitrohudin',
+    'company': 'Portcities.Ltd',
+    'website': "https://www.portcities.net",
+    'depends': ['base', 'mofi_leasing'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/res_company_views.xml',
+        'views/ftp_scheduler.xml',
+        'views/logging_integration_views.xml',
+    ],
+    'license': 'AGPL-3',
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+}

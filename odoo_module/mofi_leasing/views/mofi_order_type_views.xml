@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+    <!-- form view -->
+    <record id="mofi_order_type_view_form" model="ir.ui.view">
+        <field name="name">mofi.order.type.view.form</field>
+        <field name="model">mofi.order.type</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <group>
+                            <!-- <field name="name" invisible="0"/> -->
+                            <field name="name" required="1"/>
+                            <field name="code" required="1"/>
+                            <field name="is_loan_submission" required="1"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+
+
+                        <!-- Add your fields here -->
+
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!-- tree view -->
+
+    <record id="mofi_order_type_view_tree" model="ir.ui.view">
+        <field name="name">mofi.order.type.view.tree</field>
+        <field name="model">mofi.order.type</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- Add your fields here -->
+                <field name="name" required="1"/>
+                <field name="code"/>
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="leasing_order_type_action" model="ir.actions.act_window">
+        <field name="name">Order Type</field>
+        <field name="res_model">mofi.order.type</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+</odoo>

@@ -1,0 +1,96 @@
+DROP FUNCTION IF EXISTS process_delete_unpack_product(timestamp, timestamp, varchar);
+CREATE OR REPLACE FUNCTION public.process_delete_unpack_product(start_date timestamp, end_date timestamp, store_code varchar)
+RETURNS VOID
+LANGUAGE plpgsql AS
+$$
+    BEGIN
+    
+    	alter table stock_move_line drop constraint if exists stock_move_line_picking_id_fkey;
+      alter table stock_move_line drop constraint if exists stock_move_line_move_id_fkey;
+      alter table stock_move drop constraint if exists stock_move_picking_id_fkey ;
+      alter table stock_move drop constraint  if exists stock_move_origin_returned_move_id_fkey;
+
+      alter table stock_picking drop constraint stock_picking_pkey;
+      alter table stock_move drop constraint stock_move_pkey;
+      alter table stock_move_line drop constraint stock_move_line_pkey;
+      
+    
+      DELETE FROM stock_move WHERE origin = 'Unpack product' AND date >= start_date AND date <= end_date;
+      DELETE FROM stock_move_line WHERE reference = 'Unpack product' AND date >= start_date AND date <= end_date;
+      
+      DELETE FROM stock_move WHERE origin = 'INV Adjustment' AND date >= start_date AND date <= end_date;
+      DELETE FROM stock_move_line WHERE reference = 'INV Adjustment' AND date >= start_date AND date <= end_date;
+      
+      UPDATE inventory_adjustment_notification SET 
+        db_name = 'kasumi_middleware', 
+        db_port = '5432', 
+        db_host = '10.130.0.35',
+        db_user = 'celery', 
+        db_password = 'celeryadmin', 
+        inventory_adjustment_store_code = store_code
+      WHERE unique_key = 'inventory_adjustment_notification';
+      
+      select unpack_transaction_main_process();
+      
+      alter table stock_picking add primary key (id);
+      alter table stock_move add primary key (id);
+      alter table stock_move_line add primary key (id);
+      alter table stock_move add constraint stock_move_picking_id_fkey foreign key (picking_id) REFERENCES stock_picking (id);
+      alter table stock_move_line add constraint stock_move_line_picking_id_fkey foreign key (picking_id) REFERENCES stock_picking (id);
+      alter table stock_move_line add constraint stock_move_line_move_id_fkey foreign key (move_id) REFERENCES stock_move (id);
+      alter table stock_move add constraint stock_move_origin_returned_move_id_fkey foreign key (origin_returned_move_id) REFERENCES stock_move(id);
+    END;
+$$;
+
+
+
+DROP materialized view if exists stock_quant_loc cascade;
+CREATE MATERIALIZED VIEW IF NOT EXISTS stock_quant_loc AS
+  select location_id from stock_quant limit 1;
+
+  delete from stock_quant;
+
+  insert into stock_quant (product_id, company_id, location_id, quantity, reserved_quantity, create_uid, write_uid)
+  select odoo.product_id, 1 as company_id, (select location_id from stock_quant_loc limit 1) as location_id, qty, 0 as reserved_quantity, 1 as create_uid, 1 as write_uid from stock_quant initial full outer join (SELECT product_id,
+  coalesce(sum(case when src_loc.usage != 'internal' and dest_loc.usage = 'internal' 
+         then move.qty_done else 0 end), 0) -
+  coalesce(sum(case when src_loc.usage = 'internal' and dest_loc.usage != 'internal'
+         then move.qty_done else 0 end), 0) as qty
+  FROM stock_move_line move join product_product pp on pp.id = product_id
+  join stock_location src_loc on src_loc.id = move.location_id
+      join stock_location dest_loc on dest_loc.id = move.location_dest_id
+  WHERE (move.location_id in (select id from stock_location where usage not in ('internal', 'view', 'transit')) or
+           move.location_id in (select id from stock_location where usage in ('transit', 'internal'))) or
+          (move.location_dest_id in (select id from stock_location where usage not in  ('internal', 'view', 'transit')) or
+           move.location_id in (select id from stock_location where usage in ('transit', 'internal')))
+      and move.state = 'done'
+  group by product_id) as odoo ON odoo.product_id = initial.product_id where qty != 0;
+
+
+  DROP MATERIALIZED VIEW IF EXISTS max_stock_move;
+  CREATE MATERIALIZED VIEW IF NOT EXISTS max_stock_move AS
+  select max(create_date) as max_create_date, product_id as max_product_id from stock_move group by product_id;
+
+  DROP MATERIALIZED VIEW IF EXISTS min_stock_move;
+  CREATE MATERIALIZED VIEW IF NOT EXISTS min_stock_move AS
+  select min(create_date) as min_create_date, product_id as min_product_id from stock_move group by product_id;
+
+  UPDATE stock_quant set create_date = min_create_date from min_stock_move where min_product_id = product_id;
+
+  UPDATE stock_quant set write_date = max_create_date from max_stock_move where max_product_id = product_id;
+
+  DROP MATERIALIZED VIEW IF EXISTS max_stock_move;
+
+  DROP MATERIALIZED VIEW IF EXISTS min_stock_move;
+
+  UPDATE stock_quant
+  SET 
+      classification_categ_id = pt.classification_categ_id,
+      dept_code_categ_id = pt.dept_code_categ_id,
+      product_group_categ_id = pt.product_group_categ_id,
+      variety_categ_id = pt.variety_categ_id
+  FROM
+      product_product p
+      JOIN product_template pt ON pt.id = p.product_tmpl_id
+  WHERE product_id = p.id;
+

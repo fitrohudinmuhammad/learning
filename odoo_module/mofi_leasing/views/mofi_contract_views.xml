@@ -1,0 +1,249 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- mofi.leasing.contract action server -->
+
+    <record id="leasing_account_action" model="ir.actions.act_window">
+        <field name="name">Leasing Account</field>
+        <field name="res_model">mofi.leasing.account</field>
+        <field name="view_mode">tree</field>
+    </record>
+
+    <!-- leasing.contract tree view -->
+    <record id="leasing_contract_view_tree" model="ir.ui.view">
+        <field name="name">leasing.contract.view.tree</field>
+        <field name="model">leasing.contract</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- Add your fields here -->
+                <field name="name"></field>
+                <field name="debtor_id"></field>
+                <field name="funding_type_id"></field>
+                <field name="channel_id"></field>
+                <field name="loan_purpose_id"></field>
+                <field name="branch_id"></field>
+                <field name="start_date"></field>
+                <field name="end_date"></field>
+                <field name="status"></field>
+                <field name="journal_entries_count" optional="hide"></field>
+            </tree>
+        </field>
+    </record>
+
+    <!-- mofi.leasing form view -->
+    <record id="mofi_leasing_view_form" model="ir.ui.view">
+        <field name="name">mofi.leasing.contract.view.form</field>
+        <field name="model">leasing.contract</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <header>
+                    <button name="%(action_view_account_move_reversal)d" string="Draft"
+                            type="action" attrs="{'invisible': [('status','=','draft')]}"/>
+                    <button name="button_active" string="Active" type="object"
+                            attrs="{'invisible': [('status','!=','draft')]}"/>
+                    <button name="button_close" string="Close" type="object" attrs="{'invisible': [('status','!=', 'active')]}"/>
+                    <button name="button_cancel" string="Cancel" type="object" attrs="{'invisible': [('status','!=','draft')]}"/>
+                    <button name="button_termination" string="Termination" type="object"
+                            attrs="{'invisible': [('status','!=', 'active')]}"/>
+                    <field name="status" widget="statusbar" required="1"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" name="action_amortization_list"
+                            type="object" icon="fa-bars"
+                            attrs="{'invisible': [('amortization_count','=', 0)]}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="amortization_count"
+                                           widget="statinfo"
+                                           nolabel="1"
+                                           class="mr4"/>
+                                </span>
+                                <span class="o_stat_text">Amortization</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" name="action_journal_list"
+                            type="object" icon="fa-usd">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value">
+                                    <field name="journal_entries_count"
+                                           widget="statinfo"
+                                           nolabel="1"
+                                           class="mr4"/>
+                                </span>
+                                <span class="o_stat_text">Entries</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <!-- <h1><field name="contract_number_id" required="1"/></h1> -->
+                        <label for="name" name_label="Contract Number"/>
+                        <h1>
+                            <field name="name" required="1"
+                                   attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                        </h1>
+                    </div>
+                    <group name="leasing">
+                        <group name="contract_info">
+                            <field name="debtor_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="funding_type_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="channel_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="loan_purpose_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="is_restructure" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="is_test" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="branch_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                        </group>
+                         <group>
+                            <field name="start_date" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="end_date" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="termination_date" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="plat" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="bpkb" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            <field name="mca_number" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                        </group>
+                        <group>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page name="loan_info" string="Loan Info">
+                            <field name="contract_line">
+                                <tree string="Loan Detail" editable="bottom">
+                                    <field name="status" invisible="1"/>
+                                    <field name="contract_id" invisible="1"/>
+                                    <field name="order_fee_id"  invisible="1"/>
+                                    <field name="leasing_line_id" />
+                                    <field name="order_date" required="1" />
+                                    <field name="order_type_id" required="1" />
+                                    <field name="suborder_type_id" required="1" />
+                                    <field name="fee_type_id" required="1" />
+                                    <field name="amortization" />
+                                    <field name="amortization_id" readonly="1"/>
+                                    <field name="account_move_id" readonly="1"/>
+                                    <field name="amount" required="1" />
+                                    <field name="currency_id" required="1" invisible="1" />
+                                    <field name="account_journal_id"
+                                            required="1"/>
+                                    <field name="payment_channel_id" required="1" />
+                                </tree>
+                            </field>
+
+                        </page>
+                        <page name="payment" string="Payment">
+                            <field name="payment_line" >
+                                <tree string="Payment Detail" editable="bottom">
+                                    <field name="status" invisible="1"/>
+
+                                    <field name="contract_id" invisible="1"/>
+                                    <field name="order_fee_id"  invisible="1" readonly="1"/>
+                                    <field name="leasing_line_id" readonly="1"/>
+                                    <field name="order_date" required="1"/>
+                                    <field name="order_type_id" required="1" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="suborder_type_id" required="1" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="fee_type_id" required="1" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="manual_payment" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="account_move_id" readonly="1"/>
+                                    <field name="amount" required="1" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                    <field name="account_journal_id"
+                                            required="1"
+                                            attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+                                    <field name="payment_channel_id"
+                                            required="1" attrs="{'readonly': [('account_move_id', '!=', False)]}"/>
+
+                                    <button name="action_edit" type="object" string="Edit"
+                                            groups="mofi_leasing.group_leasing_manager"
+                                            attrs="{'invisible': [('status', 'in', ('draft','close','cancel'))]}"/> |
+                                    <!-- <button name="action_unreconcile" type="object" string="Unreconcile"
+                                            groups="mofi_leasing.group_leasing_manager"
+                                            attrs="{'invisible': [('status', 'in', ('draft','close','cancel'))]}"/> -->
+                                </tree>
+                            </field>
+                        </page>
+                        <page name="interest" string="Interest">
+                            <field name="interest_line" >
+                                <tree string="Interest Detail" editable="bottom">
+                                    <field name="status" invisible="1"/>
+
+                                    <field name="due_date" required="1"/>
+                                    <field name="order_date" required="1"/>
+                                    <field name="fee_type_id" required="1"/>
+                                    <field name="percen_accrual" required="1"/>
+                                    <field name="eom_account_move_id" readonly="1"/>
+                                    <field name="journal_account_move_id" readonly="1"/>
+                                    <field name="interest_to_eom" required="1"/>
+                                    <field name="currency_id" invisible="1"/>
+                                    <field name="interest_to_due_date" required="1"/>
+                                    <field name="total_accrual" required="1" readonly="1"/>
+
+                                </tree>
+                            </field>
+                            <group name="total_interest" col="6" class="mt-2 mt-md-0">
+                                <group colspan="4">
+                                    <!-- <field  colspan="2" name="note" nolabel="1" placeholder="Terms and conditions..."/> -->
+                                </group>
+                                <group class="oe_subtotal_footer oe_right" colspan="2">
+                                    <field name="total_interest" nolabel="1" colspan="2" readonly="1" force_save="1"/>
+                                </group>
+                                <div class="clearfix"/>
+                            </group>
+                        </page>
+
+
+                    </notebook>
+                    <group name="note_group" col="6" class="mt-2 mt-md-0">
+                        <group colspan="4">
+                            <field  colspan="2" name="note" nolabel="1" placeholder="Terms and conditions..."/>
+                        </group>
+                        <group class="oe_subtotal_footer oe_right" colspan="2">
+                        </group>
+                        <div class="clearfix"/>
+                    </group>
+                </sheet>
+                <!-- Chatter -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                    <field name="activity_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- leasing.contract action window -->
+    <record id="leasing_contract_action" model="ir.actions.act_window">
+        <field name="name">Leasing Contract</field>
+        <field name="res_model">leasing.contract</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                <!-- Add Text Here -->
+            </p><p>
+                <!-- More details about what a user can do with this object will be OK -->
+
+            </p>
+        </field>
+    </record>
+
+    <record id="leasing_contract_partner_action" model="ir.actions.act_window">
+        <field name="name">Debtor</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{}</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">
+                <!-- Add Text Here -->
+            </p><p>
+                <!-- More details about what a user can do with this object will be OK -->
+
+            </p>
+        </field>
+    </record>
+
+
+</odoo>

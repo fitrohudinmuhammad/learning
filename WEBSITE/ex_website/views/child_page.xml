@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <data>
+        <template id="child_pages" name="Child Pages">
+            <t t-call="website.layout">
+                <t t-call="ex_website.image-header"/>
+                <div class="configuration-setting pt32 pb32">
+                    <section>
+                        <div class="container">
+                            <div class="row">
+                                <div class="card-buttons col-lg-3">
+                                    <t t-call="ex_website.card-sideleft"/>
+                                </div>
+                                <div class="card-contents col-lg-9"/>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </template>
+        <template id="image-header">
+            <div id="wrap" class="wrap o_wslides_wrap">
+                <div class="oe_structure oe_empty">
+                    <section class="s_cover parallax s_parallax_is_fixed bg-black-50 pt96 pb96" data-scroll-background-ratio="1">
+                        <span class="s_parallax_bg oe_img_bg" style="background-image: url('/web/image/website.s_cover_default_image'); background-position: 50% 0;"/>
+                        <div class="o_we_bg_filter bg-black-50"/>
+                        <div class="container s_allow_columns">
+                            <h1 style="text-align: center;"><font style="font-size: 62px; font-weight: bold;">Example Pages</font></h1>
+                            <p class="lead" style="text-align: center;">Write one or two paragraphs describing your product, services or a specific feature.<br/> To be successful your content needs to be useful to your readers.</p>
+                            <p style="text-align: center;">
+                                <a t-att-href="cta_btn_href" class="btn btn-primary mb-2"><t t-esc="cta_btn_text">Button</t></a>
+                            </p>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </template>
+        <template id="card-sideleft">
+            <ul class="card-lists">
+                <li>
+                    <a href="/example-pages/1/card1" class="select-button">Select Card 1</a>
+                </li>
+                <li>
+                    <a href="/example-pages/1/card2" class="select-button">Select Card 2</a>
+                </li>
+                <li>
+                    <a href="/example-pages/1/card3" class="select-button">Select Card 3</a>
+                </li>
+            </ul>
+        </template>
+
+        <template id="card1">
+            <t t-call="website.layout">
+                <t t-call="ex_website.image-header"/>
+                <div class="configuration-setting pt32 pb32">
+                    <section>
+                        <div class="container">
+                            <div class="row">
+                                <div class="card-buttons col-lg-3">
+                                    <t t-call="ex_website.card-sideleft"/>
+                                </div>
+                                <div class="card-contents col-lg-9">
+                                    <div class="card-content">Card 1 Content</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </template>
+        <template id="card2">
+            <t t-call="website.layout">
+                <t t-call="ex_website.image-header"/>
+                <div class="configuration-setting pt32 pb32">
+                    <section>
+                        <div class="container">
+                            <div class="row">
+                                <div class="card-buttons col-lg-3">
+                                    <t t-call="ex_website.card-sideleft"/>
+                                </div>
+                                <div class="card-contents col-lg-9">
+                                    <div class="card-content">Card 2 Content</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </template>
+        <template id="card3">
+            <t t-call="website.layout">
+                <t t-call="ex_website.image-header"/>
+                <div class="configuration-setting pt32 pb32">
+                    <section>
+                        <div class="container">
+                            <div class="row">
+                                <div class="card-buttons col-lg-3">
+                                    <t t-call="ex_website.card-sideleft"/>
+                                </div>
+                                <div class="card-contents col-lg-9">
+                                    <div class="card-content">Card 3 Content</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </t>
+        </template>
+    </data>
+</odoo>

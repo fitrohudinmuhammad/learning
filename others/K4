@@ -1,0 +1,44 @@
+DROP TABLE IF EXISTS middleware_freeple_po_details;
+CREATE TABLE middleware_freeple_po_details(
+    id bigserial,
+    po_id int, --odoo id
+    po_line_id int,
+    po_date timestamp, -- date order
+    ten_code varchar, -- store_code
+    item_code varchar, -- default_code
+    item_mk varchar, -- product name
+    hac_qty float, -- quantity
+    create_time timestamp,
+
+    name varchar, --po_name
+    amount_total float, 
+    partner_id int,
+    state varchar,
+    partner_ref varchar, --vendor reference
+    date_approve timestamp,
+    price float, --price_unit
+
+    po_type varchar,
+    store_name varchar,
+    product_name varchar, --product name complete
+    price_subtotal float,
+    product_uom varchar,
+    product_uom_id int,
+
+    stage int default 1
+)partition by list(stage);
+
+CREATE TABLE middleware_freeple_po_details_failed PARTITION OF middleware_freeple_po_details FOR VALUES IN(0);
+CREATE TABLE middleware_freeple_po_details_new_row PARTITION OF middleware_freeple_po_details FOR VALUES IN(1);
+CREATE TABLE middleware_freeple_po_details_send_js_connector PARTITION OF middleware_freeple_po_details FOR VALUES IN(2);
+
+CREATE INDEX IF NOT EXISTS middleware_freeple_po_details_id_idx ON middleware_freeple_po_details(id);
+CREATE INDEX IF NOT EXISTS middleware_freeple_po_details_po_date_idx ON middleware_freeple_po_details(po_date);
+CREATE INDEX IF NOT EXISTS middleware_freeple_po_details_ten_code_idx ON middleware_freeple_po_details(ten_code);
+CREATE INDEX IF NOT EXISTS middleware_freeple_po_details_item_code_idx ON middleware_freeple_po_details(item_code);
+
+
+sudo rabbitmqctl add_user admins 1234
+sudo rabbitmqctl add_vhost js_connector
+sudo rabbitmqctl set_user_tags admins administrator
+sudo rabbitmqctl set_permissions -p js_connector admins "." "." ".*"

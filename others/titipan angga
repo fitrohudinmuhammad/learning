@@ -1,0 +1,504 @@
+CREATE OR REPLACE FUNCTION public.process_teraoka_sales_backup(store_code_params varchar)
+    RETURNS void
+    LANGUAGE plpgsql
+AS $function$
+    begin
+        with cte AS (
+            select
+                id,
+                product_code,
+                business_day,
+                store_code,
+                row_type,
+                sum(sales_volume_1) as qty_1, 
+                sum(sales_volume_2) as qty_2, 
+                sum(sales_volume_3) as qty_3,
+                sum(sales_volume_4) as qty_4, 
+                sum(sales_volume_5) as qty_5, 
+                sum(sales_volume_6) as qty_6,
+                sum(sales_volume_7) as qty_7, 
+                sum(sales_volume_8) as qty_8, 
+                sum(sales_volume_9) as qty_9,
+                sum(sales_volume_10) as qty_10, 
+                sum(sales_volume_11) as qty_11, 
+                sum(sales_volume_12) as qty_12,
+                sum(sales_volume_13) as qty_13, 
+                sum(sales_volume_14) as qty_14, 
+                sum(sales_volume_15) as qty_15,
+                sum(sales_volume_16) as qty_16, 
+                sum(sales_volume_17) as qty_17, 
+                sum(sales_volume_18) as qty_18,
+                sum(sales_volume_19) as qty_19, 
+                sum(sales_volume_20) as qty_20, 
+                sum(sales_volume_21) as qty_21,
+                sum(sales_volume_22) as qty_22, 
+                sum(sales_volume_23) as qty_23, 
+                sum(sales_volume_24) as qty_24,
+                sum(sales_amount_1) as sales_amount_1, 
+                sum(sales_amount_2) as sales_amount_2, 
+                sum(sales_amount_3) as sales_amount_3,
+                sum(sales_amount_4) as sales_amount_4, 
+                sum(sales_amount_5) as sales_amount_5, 
+                sum(sales_amount_6) as sales_amount_6,
+                sum(sales_amount_7) as sales_amount_7, 
+                sum(sales_amount_8) as sales_amount_8, 
+                sum(sales_amount_9) as sales_amount_9,
+                sum(sales_amount_10) as sales_amount_10, 
+                sum(sales_amount_11) as sales_amount_11, 
+                sum(sales_amount_12) as sales_amount_12,
+                sum(sales_amount_13) as sales_amount_13, 
+                sum(sales_amount_14) as sales_amount_14, 
+                sum(sales_amount_15) as sales_amount_15,
+                sum(sales_amount_16) as sales_amount_16, 
+                sum(sales_amount_17) as sales_amount_17, 
+                sum(sales_amount_18) as sales_amount_18,
+                sum(sales_amount_19) as sales_amount_19, 
+                sum(sales_amount_20) as sales_amount_20, 
+                sum(sales_amount_21) as sales_amount_21,
+                sum(sales_amount_22) as sales_amount_22, 
+                sum(sales_amount_23) as sales_amount_23, 
+                sum(sales_amount_24) as sales_amount_24,
+                sum(discount_value_1) as discount_value_1, 
+                sum(discount_value_2) as discount_value_2, 
+                sum(discount_value_3) as discount_value_3,
+                sum(discount_value_4) as discount_value_4, 
+                sum(discount_value_5) as discount_value_5, 
+                sum(discount_value_6) as discount_value_6,
+                sum(discount_value_7) as discount_value_7, 
+                sum(discount_value_8) as discount_value_8, 
+                sum(discount_value_9) as discount_value_9,
+                sum(discount_value_10) as discount_value_10, 
+                sum(discount_value_11) as discount_value_11, 
+                sum(discount_value_12) as discount_value_12,
+                sum(discount_value_13) as discount_value_13, 
+                sum(discount_value_14) as discount_value_14, 
+                sum(discount_value_15) as discount_value_15,
+                sum(discount_value_16) as discount_value_16, 
+                sum(discount_value_17) as discount_value_17, 
+                sum(discount_value_18) as discount_value_18,
+                sum(discount_value_19) as discount_value_19, 
+                sum(discount_value_20) as discount_value_20, 
+                sum(discount_value_21) as discount_value_21,
+                sum(discount_value_22) as discount_value_22, 
+                sum(discount_value_23) as discount_value_23, 
+                sum(discount_value_24) as discount_value_24,
+                sum(discount_qty_1) as discount_qty_1, 
+                sum(discount_qty_2) as discount_qty_2, 
+                sum(discount_qty_3) as discount_qty_3,
+                sum(discount_qty_4) as discount_qty_4, 
+                sum(discount_qty_5) as discount_qty_5, 
+                sum(discount_qty_6) as discount_qty_6,
+                sum(discount_qty_7) as discount_qty_7, 
+                sum(discount_qty_8) as discount_qty_8, 
+                sum(discount_qty_9) as discount_qty_9,
+                sum(discount_qty_10) as discount_qty_10, 
+                sum(discount_qty_11) as discount_qty_11, 
+                sum(discount_qty_12) as discount_qty_12,
+                sum(discount_qty_13) as discount_qty_13, 
+                sum(discount_qty_14) as discount_qty_14, 
+                sum(discount_qty_15) as discount_qty_15,
+                sum(discount_qty_16) as discount_qty_16, 
+                sum(discount_qty_17) as discount_qty_17, 
+                sum(discount_qty_18) as discount_qty_18,
+                sum(discount_qty_19) as discount_qty_19, 
+                sum(discount_qty_20) as discount_qty_20, 
+                sum(discount_qty_21) as discount_qty_21,
+                sum(discount_qty_22) as discount_qty_22, 
+                sum(discount_qty_23) as discount_qty_23, 
+                sum(discount_qty_24) as discount_qty_24
+            from teraoka_sales
+            where row_type in (1, 2) AND store_code = store_code_params
+            group by product_code, business_day, store_code, id, row_type
+            order by business_day, store_code, product_code, row_type
+        ),
+
+        partial_output as (
+            select 
+                id,
+                product_code,
+                business_day,
+                store_code,
+                row_type,-- sales_amount
+                case
+                    when lag(sales_amount_1) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_1
+                    else sales_amount_1 -lag(sales_amount_1) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_1,
+                case
+                    when lag(sales_amount_2) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_2
+                    else sales_amount_2 -lag(sales_amount_2) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_2,
+                case
+                    when lag(sales_amount_3) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_3
+                    else sales_amount_3 -lag(sales_amount_3) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_3,
+                case
+                    when lag(sales_amount_4) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_4
+                    else sales_amount_4 -lag(sales_amount_4) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_4,
+                case
+                    when lag(sales_amount_5) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_5
+                    else sales_amount_5 -lag(sales_amount_5) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_5,
+                case
+                    when lag(sales_amount_6) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_6
+                    else sales_amount_6 -lag(sales_amount_6) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_6,
+                case
+                    when lag(sales_amount_7) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_7
+                    else sales_amount_7 -lag(sales_amount_7) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_7,
+                case
+                    when lag(sales_amount_8) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_8
+                    else sales_amount_8 -lag(sales_amount_8) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_8,
+                case
+                    when lag(sales_amount_9) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_9
+                    else sales_amount_9 -lag(sales_amount_9) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_9,
+                case
+                    when lag(sales_amount_10) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_10
+                    else sales_amount_10 -lag(sales_amount_10) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_10,
+                case
+                    when lag(sales_amount_11) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_11
+                    else sales_amount_11 -lag(sales_amount_11) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_11,
+                case
+                    when lag(sales_amount_12) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_12
+                    else sales_amount_12 -lag(sales_amount_12) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_12,
+                case
+                    when lag(sales_amount_13) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_13
+                    else sales_amount_13 -lag(sales_amount_13) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_13,
+                case
+                    when lag(sales_amount_14) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_14
+                    else sales_amount_14 -lag(sales_amount_14) over (partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_14,
+                case
+                    when lag(sales_amount_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_15
+                    else sales_amount_15 -lag(sales_amount_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_15,
+                case
+                    when lag(sales_amount_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_16
+                    else sales_amount_16 -lag(sales_amount_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_16,
+                case
+                    when lag(sales_amount_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_17
+                    else sales_amount_17 -lag(sales_amount_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_17,
+                case
+                    when lag(sales_amount_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_18
+                    else sales_amount_18 -lag(sales_amount_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_18,
+                case
+                    when lag(sales_amount_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_19
+                    else sales_amount_19 -lag(sales_amount_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_19,
+                case
+                    when lag(sales_amount_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_20
+                    else sales_amount_20 -lag(sales_amount_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_20,
+                case
+                    when lag(sales_amount_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_21
+                    else sales_amount_21 -lag(sales_amount_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_21,
+                case
+                    when lag(sales_amount_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_22
+                    else sales_amount_22 -lag(sales_amount_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_22,
+                case
+                    when lag(sales_amount_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_23
+                    else sales_amount_23 -lag(sales_amount_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_23,
+                case
+                    when lag(sales_amount_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then sales_amount_24
+                    else sales_amount_24 -lag(sales_amount_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as sales_amount_24,-- sales_qty
+                case
+                    when lag(qty_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_1
+                    else qty_1 -lag(qty_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as qty_1,
+                case
+                    when lag(qty_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_2
+                    else qty_2 -lag(qty_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as qty_2,
+                case
+                    when lag(qty_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_3
+                    else qty_3 -lag(qty_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as qty_3,
+                case
+                    when lag(qty_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_4
+                    else qty_4 -lag(qty_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as qty_4,
+                case
+                    when lag(qty_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_5
+                    else qty_5 -lag(qty_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)
+                    end as qty_5,
+                case
+                    when lag(qty_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_6
+                    else qty_6 -lag(qty_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_6,
+                case
+                    when lag(qty_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_7
+                    else qty_7 -lag(qty_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_7,
+                case
+                    when lag(qty_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_8
+                    else qty_8 -lag(qty_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_8,
+                case
+                    when lag(qty_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_9
+                    else qty_9 -lag(qty_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_9,
+                case
+                    when lag(qty_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_10
+                    else qty_10 -lag(qty_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_10,
+                case
+                    when lag(qty_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_11
+                    else qty_11 -lag(qty_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_11,
+                case
+                    when lag(qty_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_12
+                    else qty_12 -lag(qty_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_12,
+                case
+                    when lag(qty_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_13
+                    else qty_13 -lag(qty_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_13,
+                case
+                    when lag(qty_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_14
+                    else qty_14 -lag(qty_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_14,
+                case
+                    when lag(qty_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_15
+                    else qty_15 -lag(qty_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_15,
+                case
+                    when lag(qty_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_16
+                    else qty_16 -lag(qty_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_16,
+                case
+                    when lag(qty_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_17
+                    else qty_17 -lag(qty_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_17,
+                case
+                    when lag(qty_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_18
+                    else qty_18 -lag(qty_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_18,
+                case
+                    when lag(qty_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_19
+                    else qty_19 -lag(qty_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_19,
+                case
+                    when lag(qty_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_20
+                    else qty_20 -lag(qty_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_20,
+                case
+                    when lag(qty_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_21
+                    else qty_21 -lag(qty_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_21,
+                case
+                    when lag(qty_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_22
+                    else qty_22 -lag(qty_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_22,
+                case
+                    when lag(qty_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_23
+                    else qty_23 -lag(qty_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_23,
+                case
+                    when lag(qty_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then qty_24
+                    else qty_24 -lag(qty_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as qty_24,-- discount_value
+                case
+                    when lag(discount_value_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_1
+                    else discount_value_1 -lag(discount_value_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_1,
+                case
+                    when lag(discount_value_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_2
+                    else discount_value_2 -lag(discount_value_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_2,
+                case
+                    when lag(discount_value_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_3
+                    else discount_value_3 -lag(discount_value_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_3,
+                case
+                    when lag(discount_value_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_4
+                    else discount_value_4 -lag(discount_value_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_4,
+                case
+                    when lag(discount_value_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_5
+                    else discount_value_5 -lag(discount_value_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_5,
+                case
+                    when lag(discount_value_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_6
+                    else discount_value_6 -lag(discount_value_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_6,
+                case
+                    when lag(discount_value_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_7
+                    else discount_value_7 -lag(discount_value_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_7,
+                case
+                    when lag(discount_value_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_8
+                    else discount_value_8 -lag(discount_value_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_8,
+                case
+                    when lag(discount_value_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_9
+                    else discount_value_9 -lag(discount_value_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_9,
+                case
+                    when lag(discount_value_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_10
+                    else discount_value_10 -lag(discount_value_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_10,
+                case
+                    when lag(discount_value_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_11
+                    else discount_value_11 -lag(discount_value_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_11,
+                case
+                    when lag(discount_value_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_12
+                    else discount_value_12 -lag(discount_value_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_12,
+                case
+                    when lag(discount_value_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_13
+                    else discount_value_13 -lag(discount_value_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_13,
+                case
+                    when lag(discount_value_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_14
+                    else discount_value_14 -lag(discount_value_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_14,
+                case
+                    when lag(discount_value_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_15
+                    else discount_value_15 -lag(discount_value_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_15,
+                case
+                    when lag(discount_value_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_16
+                    else discount_value_16 -lag(discount_value_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_16,
+                case
+                    when lag(discount_value_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_17
+                    else discount_value_17 -lag(discount_value_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_17,
+                case
+                    when lag(discount_value_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_18
+                    else discount_value_18 -lag(discount_value_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_18,
+                case
+                    when lag(discount_value_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_19
+                    else discount_value_19 -lag(discount_value_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_19,
+                case
+                    when lag(discount_value_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_20
+                    else discount_value_20 -lag(discount_value_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_20,
+                case
+                    when lag(discount_value_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_21
+                    else discount_value_21 -lag(discount_value_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_21,
+                case
+                    when lag(discount_value_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_22
+                    else discount_value_22 -lag(discount_value_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_22,
+                case
+                    when lag(discount_value_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_23
+                    else discount_value_23 -lag(discount_value_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_23,
+                case
+                    when lag(discount_value_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_value_24
+                    else discount_value_24 -lag(discount_value_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_value_24,-- discount_qty
+                case
+                    when lag(discount_qty_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_1
+                    else discount_qty_1 -lag(discount_qty_1) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_1,
+                case
+                    when lag(discount_qty_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_2
+                    else discount_qty_2 -lag(discount_qty_2) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_2,
+                case
+                    when lag(discount_qty_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_3
+                    else discount_qty_3 -lag(discount_qty_3) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_3,
+                case
+                    when lag(discount_qty_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_4
+                    else discount_qty_4 -lag(discount_qty_4) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_4,
+                case
+                    when lag(discount_qty_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_5
+                    else discount_qty_5 -lag(discount_qty_5) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_5,
+                case
+                    when lag(discount_qty_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_6
+                    else discount_qty_6 -lag(discount_qty_6) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_6,
+                case
+                    when lag(discount_qty_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_7
+                    else discount_qty_7 -lag(discount_qty_7) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_7,
+                case
+                    when lag(discount_qty_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_8
+                    else discount_qty_8 -lag(discount_qty_8) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_8,
+                case
+                    when lag(discount_qty_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_9
+                    else discount_qty_9 -lag(discount_qty_9) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_9,
+                case
+                    when lag(discount_qty_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_10
+                    else discount_qty_10 -lag(discount_qty_10) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_10,
+                case
+                    when lag(discount_qty_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_11
+                    else discount_qty_11 -lag(discount_qty_11) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_11,
+                case
+                    when lag(discount_qty_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_12
+                    else discount_qty_12 -lag(discount_qty_12) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_12,
+                case
+                    when lag(discount_qty_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_13
+                    else discount_qty_13 -lag(discount_qty_13) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_13,
+                case
+                    when lag(discount_qty_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_14
+                    else discount_qty_14 -lag(discount_qty_14) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_14,
+                case
+                    when lag(discount_qty_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_15
+                    else discount_qty_15 -lag(discount_qty_15) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_15,
+                case
+                    when lag(discount_qty_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_16
+                    else discount_qty_16 -lag(discount_qty_16) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_16,
+                case
+                    when lag(discount_qty_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_17
+                    else discount_qty_17 -lag(discount_qty_17) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_17,
+                case
+                    when lag(discount_qty_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_18
+                    else discount_qty_18 -lag(discount_qty_18) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_18,
+                case
+                    when lag(discount_qty_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_19
+                    else discount_qty_19 -lag(discount_qty_19) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_19,
+                case
+                    when lag(discount_qty_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_20
+                    else discount_qty_20 -lag(discount_qty_20) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_20,
+                case
+                    when lag(discount_qty_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_21
+                    else discount_qty_21 -lag(discount_qty_21) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_21,
+                case
+                    when lag(discount_qty_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_22
+                    else discount_qty_22 -lag(discount_qty_22) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_22,
+                case
+                    when lag(discount_qty_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_23
+                    else discount_qty_23 -lag(discount_qty_23) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_23,
+                case
+                    when lag(discount_qty_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type) is null then discount_qty_24
+                    else discount_qty_24 -lag(discount_qty_24) over(partition by product_code, business_day, store_code order by business_day, store_code, product_code, row_type)end as discount_qty_24 
+            from cte
+        ),
+                  
+        final_output as(
+            SELECT
+                id,
+                product_code,
+                store_code,
+                business_day,
+                row_type,
+                UNNEST(ARRAY ['qty_1', 'qty_2','qty_3','qty_4','qty_5','qty_6','qty_7','qty_8',
+                    'qty_9','qty_10','qty_11', 'qty_12', 'qty_13', 'qty_14','qty_15','qty_16',
+                    'qty_17','qty_18','qty_19','qty_20','qty_21', 'qty_22', 'qty_23', 'qty_24']) AS qty_hour,
+                UNNEST(ARRAY [qty_1,qty_2,qty_3,qty_4,qty_5,qty_6,qty_7,qty_8,
+                    qty_9,qty_10,qty_11, qty_12, qty_13, qty_14,qty_15,qty_16,
+                    qty_17,qty_18,qty_19,qty_20,qty_21,qty_22,qty_23,qty_24]) AS qty,
+                UNNEST(ARRAY ['sales_amount_1', 'sales_amount_2','sales_amount_3','sales_amount_4',
+                    'sales_amount_5','sales_amount_6','sales_amount_7','sales_amount_8',
+                    'sales_amount_9','sales_amount_10','sales_amount_11', 'sales_amount_12',
+                    'sales_amount_13', 'sales_amount_14','sales_amount_15','sales_amount_16',
+                    'sales_amount_17','sales_amount_18','sales_amount_19','sales_amount_20',
+                    'sales_amount_21', 'sales_amount_22', 'sales_amount_23', 'sales_amount_24']) AS sales_hour,
+                UNNEST(ARRAY [sales_amount_1, sales_amount_2,sales_amount_3,sales_amount_4,
+                    sales_amount_5,sales_amount_6,sales_amount_7,sales_amount_8,
+                    sales_amount_9,sales_amount_10,sales_amount_11, sales_amount_12,
+                    sales_amount_13, sales_amount_14,sales_amount_15,sales_amount_16,
+                    sales_amount_17,sales_amount_18,sales_amount_19,sales_amount_20,
+                    sales_amount_21, sales_amount_22, sales_amount_23, sales_amount_24]) AS sales_amount,
+                UNNEST(ARRAY ['discount_value_1', 'discount_value_2','discount_value_3','discount_value_4',
+                    'discount_value_5','discount_value_6','discount_value_7','discount_value_8',
+                    'discount_value_9','discount_value_10','discount_value_11', 'discount_value_12',
+                    'discount_value_13', 'discount_value_14','discount_value_15','discount_value_16',
+                    'discount_value_17','discount_value_18','discount_value_19','discount_value_20',
+                    'discount_value_21', 'discount_value_22', 'discount_value_23', 'discount_value_24']) AS discount_value_hour,
+                UNNEST(ARRAY [discount_value_1, discount_value_2,discount_value_3,discount_value_4,
+                    discount_value_5,discount_value_6,discount_value_7,discount_value_8,
+                    discount_value_9,discount_value_10,discount_value_11, discount_value_12,
+                    discount_value_13, discount_value_14,discount_value_15,discount_value_16,
+                    discount_value_17,discount_value_18,discount_value_19,discount_value_20,
+                    discount_value_21, discount_value_22, discount_value_23, discount_value_24]) AS discount_value,
+                UNNEST(ARRAY ['discount_qty_1', 'discount_qty_2','discount_qty_3','discount_qty_4',
+                    'discount_qty_5','discount_qty_6','discount_qty_7','discount_qty_8',
+                    'discount_qty_9','discount_qty_10','discount_qty_11', 'discount_qty_12',
+                    'discount_qty_13', 'discount_qty_14','discount_qty_15','discount_qty_16',
+                    'discount_qty_17','discount_qty_18','discount_qty_19','discount_qty_20',
+                    'discount_qty_21', 'discount_qty_22', 'discount_qty_23', 'discount_qty_24']) AS discount_qty_hour,
+                UNNEST(ARRAY [discount_qty_1, discount_qty_2, discount_qty_3, discount_qty_4,
+                    discount_qty_5, discount_qty_6, discount_qty_7, discount_qty_8,
+                    discount_qty_9, discount_qty_10, discount_qty_11, discount_qty_12,
+                    discount_qty_13, discount_qty_14, discount_qty_15, discount_qty_16,
+                    discount_qty_17, discount_qty_18, discount_qty_19, discount_qty_20,
+                    discount_qty_21, discount_qty_22, discount_qty_23, discount_qty_24]) AS discount_qty
+            FROM partial_output
+        )
+
+        INSERT INTO teraoka_sales_temp(teraoka_sales_id, business_day_format, product_code, qty, clock, store_code, mark_as_done, business_day, sales_amount, discount_value, discount_qty)
+        select id, convert_hour(business_day, qty_hour), product_code, qty, qty_hour, store_code, False, business_day, sales_amount, discount_value, discount_qty 
+        from final_output f 
+        where f.qty != 0 AND f.row_type = 2; 
+
+        update teraoka_sales set row_type = 3 where row_type = 1 AND store_code = store_code_params;
+        
+        update teraoka_sales set row_type = 1 where row_type = 2 AND store_code = store_code_params;
+
+    end;
+$function$;

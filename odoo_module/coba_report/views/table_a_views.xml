@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="table_a_view_tree" model="ir.ui.view">
+        <field name="name">table.a.view.tree</field>
+        <field name="model">table.a</field>
+        <field name="arch" type="xml">
+            <tree string="Table A">
+                <field name="name"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="table_a_view_form" model="ir.ui.view">
+        <field name="name">table.a.view.form</field>
+        <field name="model">table.a</field>
+        <field name="arch" type="xml">
+            <form string="Table A">
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label">Name</span>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group name="table_header">
+                        <field name="description"/>
+                        <field name="notes"/>
+                    </group>
+                    <notebook>
+                        <page string="Report" name="table_report_ids">
+                            <field name="table_report_ids" widget="section_and_note_one2many" mode="tree">
+                                <form create="0" delete="0">
+                                    <field name="specific_date" readonly="1"/>
+                                    <field name="minutes_utilized" readonly="1" />
+                                    <field name="percentage_of_utilization" widget="percentage" readonly="1" />
+                                    <field name="minutes_idle" readonly="1" />
+                                    <field name="percentage_of_idle" widget="percentage" readonly="1" />
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="table_a_action" model="ir.actions.act_window">
+        <field name="name">Table A</field>
+        <field name="res_model">table.a</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="table_a_view_tree"/>
+    </record>
+    
+    <menuitem
+        id="table_a_menu"
+        name="Table A"
+        action="table_a_action"
+        parent="table_source_menus"
+        sequence="1"/>
+</odoo>

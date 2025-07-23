@@ -1,0 +1,42 @@
+-----------------------------------------------------
+-- Query prepare table maruetsu_filename_counter_row
+-----------------------------------------------------
+-- mkdir /opt/m2_files
+-- mkdir /opt/m2_csv_files
+-- sudo chmod -R 777 /opt/m2_files
+-- sudo chmod -R 777 /opt/m2_csv_files
+DROP TABLE IF EXISTS maruetsu_filename_counter_row cascade;
+CREATE TABLE maruetsu_filename_counter_row(
+    id bigserial,
+    file_name varchar,
+    number_of_rows bigint,
+  	create_date date default now()
+);
+CREATE INDEX IF NOT EXISTS maruetsu_filename_counter_row_filename_idx ON maruetsu_filename_counter_row(file_name);
+
+DROP TABLE IF EXISTS maruetsu_old_filename_counter_row cascade;
+CREATE TABLE maruetsu_old_filename_counter_row(
+    id bigserial,
+    file_name varchar,
+    number_of_rows bigint,
+  	is_duplicate boolean default False,
+  	create_date date default now(),
+  	directory varchar
+);
+CREATE INDEX IF NOT EXISTS maruetsu_old_filename_counter_row_filename_idx ON maruetsu_old_filename_counter_row(file_name);
+
+ALTER TABLE ftp_server ADD COLUMN IF NOT EXISTS ftp_duplicate_dir varchar;
+ALTER TABLE maruetsu_old_filename_counter_row ADD COLUMN IF NOT EXISTS create_date date default now();
+ALTER TABLE maruetsu_old_filename_counter_row ADD COLUMN IF NOT EXISTS directory varchar;
+
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT033P/' where id between 1 and 3;
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT031P/' where file_name like 'GUT031P%';
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT032P/' where file_name like 'GUT032P%';
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT033P/' where file_name like 'GUT033P%';
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT034P/' where file_name like 'GUT034P%';
+UPDATE maruetsu_old_filename_counter_row SET directory = '/success/GUT034P/' where file_name like 'GUT034P%';
+226
+select min(id) from maruetsu_old_filename_counter_row where file_name like 'GUT033P%';
+ min 
+-----
+ 226

@@ -1,0 +1,96 @@
+.navbar-dark .navbar-brand {
+    color: #fff;
+    background-color: #fff;
+}
+.navbar-dark .navbar-brand:hover, .navbar-dark .navbar-brand:focus {
+    color: #fff;
+}
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(0, 0, 0, 0.55);
+}
+.navbar-dark .navbar-nav .nav-link:hover, .navbar-dark .navbar-nav .nav-link:focus {
+    color: rgba(0, 0, 0, 0.75);
+}
+.navbar-dark .navbar-nav .nav-link.disabled {
+    color: rgba(0, 0, 0, 0.25);
+}
+.navbar-dark .navbar-nav .show > .nav-link,
+.navbar-dark .navbar-nav .nav-link.active {
+    color: #000;
+}
+.navbar-dark .navbar-toggler {
+    color: rgba(255, 255, 255, 0.55);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+.navbar-dark .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.55%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+.navbar-dark .navbar-text {
+    color: rgba(255, 255, 255, 0.55);
+}
+.navbar-dark .navbar-text a,
+.navbar-dark .navbar-text a:hover,
+.navbar-dark .navbar-text a:focus {
+    color: #000;
+}
+.dropdown-item.active:hover, .dropdown-item.active:focus {
+    color: #000000;
+    background-color: #dfdfdf;
+}
+.dropdown-item.active, .dropdown-item:active {
+    color: #000;
+    text-decoration: none;
+    background-color: #fff;
+}
+
+ul.navbar-nav li.nav-item a:hover{
+    color: #fff;
+}
+ul.navbar-nav li.nav-item ul.dropdown-menu{
+    min-width: 100%; /* Set width of the dropdown */
+    background: #fff;
+    display: none;
+    position: absolute;
+    z-index: 999;
+    left: 0;
+}
+ul.navbar-nav li.nav-item:hover ul.dropdown-menu{
+    display: block;	/* Display the dropdown */
+}
+ul.navbar-nav li.nav-item ul.dropdown-menu li{
+    display: block;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/* Styles for the cards */
+.card-contents {
+    display: flex;
+}
+.card-content {
+    flex: 1;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+}
+
+/* Styles for the buttons */
+.card-buttons {
+    margin-top: 20px;
+}
+.card-buttons ul{
+    list-style: none;
+}
+.card-buttons li{
+    padding: 10px 20px;
+    color: #333;
+}
+.card-buttons li:hover{
+    background-color: #ececec;
+}
+.card-buttons li a{
+    text-decoration: none; 
+}
+.card-buttons li a:active, .card-buttons li a:focus{
+    color: #000;
+}

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<templates>
+    <t t-extend="ExpensesListView.buttons" t-name="QwebJS.buttons">
+        <t t-jquery="button.o_button_create_report" t-operation="after">
+            <button type="button" t-att-class="'btn btn-secondary'">
+                New Button
+            </button>
+        </t>
+    </t>
+</template>

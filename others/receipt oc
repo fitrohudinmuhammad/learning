@@ -1,0 +1,233 @@
+CREATE TABLE receipt_oc_pending_data PARTITION OF receipt_oc FOR VALUES IN (4);
+CREATE TABLE receipt_oc_cancel_data PARTITION OF receipt_oc FOR VALUES IN (5);
+
+-- Set Receipt OC as Pending
+DROP FUNCTION IF EXISTS pending_receipt_oc();
+CREATE OR REPLACE FUNCTION pending_receipt_oc()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        -- Pending --> nohn_bi is today or nohn_bi > today
+        UPDATE receipt_oc SET stage=4 WHERE nohn_bi::DATE >= (now() + interval '9 hours')::date ;
+    END;
+$$;
+
+-- Resume Pending Receipt OC
+DROP FUNCTION IF EXISTS resume_pending_receipt_oc();
+CREATE OR REPLACE FUNCTION public.resume_pending_receipt_oc()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+    WITH todo as (
+        SELECT r.id
+        FROM receipt_oc r
+        LEFT JOIN inventory_adjustment_latest i ON (r.nyuka_sku_code=i.product_code AND r.nyuka_ten_code=i.store_code)
+        WHERE stage = 4 AND r.nohn_bi::DATE < (now() + interval '9 hours')::date 
+            AND (r.nohn_bi::DATE > i.inventory_date::DATE OR i.inventory_date::DATE is null)
+            AND r.nyuka_ten_code IS NOT NULL
+    )
+    UPDATE receipt_oc r SET stage=1 FROM todo WHERE r.id = todo.id and stage = 4;
+
+    WITH todo as (
+        SELECT r.id 
+        FROM receipt_oc r
+        LEFT JOIN inventory_adjustment_latest i ON (r.shuka_sku_code=i.product_code AND r.shuka_ten_code=i.store_code)
+        WHERE stage = 4 AND r.nohn_bi::DATE < (now() + interval '9 hours')::date 
+            AND (r.nohn_bi::DATE > i.inventory_date::DATE OR i.inventory_date::DATE is null)
+            AND r.shuka_ten_code IS NOT NULL
+    )
+    UPDATE receipt_oc r SET stage=1 FROM todo WHERE r.id = todo.id and stage = 4;
+    END;
+$$;
+
+-- Cancel Receipt OC
+DROP FUNCTION IF EXISTS cancel_receipt_oc();
+CREATE OR REPLACE FUNCTION cancel_receipt_oc()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        -- Cancel --> nohn_bi is < today and the last stocktaking date more than or same nohn_bi
+        WITH todo AS (
+            SELECT r.id
+            FROM receipt_oc r
+            LEFT JOIN inventory_adjustment_latest i ON (r.nyuka_sku_code=i.product_code AND r.nyuka_ten_code=i.store_code)
+            WHERE stage in (1,4) AND r.nohn_bi::DATE < (now() + interval '9 hours')::date 
+                AND r.nohn_bi::DATE <= i.inventory_date::DATE
+        )
+        UPDATE receipt_oc r SET stage=5 FROM todo WHERE r.id=todo.id and stage in (1,4);
+
+        WITH todo AS (
+            SELECT r.id
+            FROM receipt_oc r
+            LEFT JOIN inventory_adjustment_latest i ON (r.shuka_sku_code=i.product_code AND r.shuka_ten_code=i.store_code)
+            WHERE stage in (1,4) AND r.nohn_bi::DATE < (now() + interval '9 hours')::date 
+                AND r.nohn_bi::DATE <= i.inventory_date::DATE
+        )
+        UPDATE receipt_oc r SET stage=5 FROM todo WHERE r.id=todo.id and stage in (1,4);
+    END;
+$$;
+------------------------------------------------------------
+DROP TABLE IF EXISTS receipt_oc;
+CREATE TABLE receipt_oc(
+id bigserial,
+syori_date varchar,
+den_betu_code varchar,
+den_no varchar,
+den_eda_no varchar,
+den_gyo_no varchar,
+shuka_ten_code varchar, --store_code
+nyuka_ten_code varchar, --store_code
+nohn_bi varchar,
+shuka_bunrui1_code varchar,
+nyuka_bunrui1_code varchar,
+shuka_sku_code varchar, --product_code
+nyuka_sku_code varchar, --product_code
+shuka_scan_code varchar,
+nyuka_scan_code varchar,
+item_rj varchar,
+item_kbn varchar,
+kazei_kbn varchar,
+qty float,
+sir_hon_gen_tnk varchar,
+sir_gnk_kin varchar,
+sir_hon_bai_tnk varchar,
+sir_bika_kin varchar,
+mark_as_done boolean default false,
+stage integer default 1,
+create_date timestamp default now(),
+sync_metabase_stock_balance boolean default false,
+filename varchar
+);
+
+ALTER TABLE receipt_oc ADD COLUMN IF NOT EXISTS trans_type varchar;
+
+DROP FUNCTION IF EXISTS process_receipt_oc_on_process();
+CREATE OR REPLACE FUNCTION public.process_receipt_oc_on_process()
+RETURNS VOID
+LANGUAGE plpgsql AS
+$$
+    BEGIN
+      INSERT INTO receipt_oc(
+        receipt_oc_middleware_id, 
+        syori_date,
+        den_betu_code,
+        den_no,
+        den_eda_no,
+        den_gyo_no,
+        shuka_ten_code,
+        nohn_bi,
+        shuka_bunrui1_code,
+        shuka_sku_code,
+        shuka_scan_code,
+        nyuka_bunrui1_code,
+        nyuka_sku_code,
+        nyuka_scan_code,
+        item_rj,
+        item_kbn,
+        kazei_kbn,
+        qty,
+        sir_hon_gen_tnk,
+        sir_gnk_kin,
+        sir_hon_bai_tnk,
+        sir_bika_kin,
+        create_date,
+        sync_metabase_stock_balance,
+        filename,
+        trans_type
+      )
+      SELECT
+        id,
+        syori_date,
+        den_betu_code,
+        den_no,
+        den_eda_no,
+        den_gyo_no,
+        shuka_ten_code,
+        nohn_bi,
+        shuka_bunrui1_code,
+        shuka_sku_code,
+        shuka_scan_code,
+        nyuka_bunrui1_code,
+        nyuka_sku_code,
+        nyuka_scan_code,
+        item_rj,
+        item_kbn,
+        kazei_kbn,
+        qty,
+        sir_hon_gen_tnk,
+        sir_gnk_kin,
+        sir_hon_bai_tnk,
+        sir_bika_kin,
+        create_date,
+        sync_metabase_stock_balance,
+        filename,
+        'out' as trans_type
+      FROM receipt_oc_csv
+      WHERE stage = 1;
+
+      INSERT INTO receipt_oc(
+      	receipt_oc_middleware_id, 
+        syori_date,
+        den_betu_code,
+        den_no,
+        den_eda_no,
+        den_gyo_no,
+        nyuka_ten_code,
+        nohn_bi,
+        shuka_bunrui1_code,
+        shuka_sku_code,
+        shuka_scan_code,
+        nyuka_bunrui1_code,
+        nyuka_sku_code,
+        nyuka_scan_code,
+        item_rj,
+        item_kbn,
+        kazei_kbn,
+        qty,
+        sir_hon_gen_tnk,
+        sir_gnk_kin,
+        sir_hon_bai_tnk,
+        sir_bika_kin,
+        create_date,
+        sync_metabase_stock_balance,
+        filename,
+        trans_type
+      )
+      SELECT
+        id,
+        syori_date,
+        den_betu_code,
+        den_no,
+        den_eda_no,
+        den_gyo_no,
+        nyuka_ten_code,
+        nohn_bi,
+        shuka_bunrui1_code,
+        shuka_sku_code,
+        shuka_scan_code,
+        nyuka_bunrui1_code,
+        nyuka_sku_code,
+        nyuka_scan_code,
+        item_rj,
+        item_kbn,
+        kazei_kbn,
+        qty,
+        sir_hon_gen_tnk,
+        sir_gnk_kin,
+        sir_hon_bai_tnk,
+        sir_bika_kin,
+        create_date,
+        sync_metabase_stock_balance,
+        filename,
+        'in' as trans_type
+      FROM receipt_oc_csv
+      WHERE stage = 1;
+    
+    	UPDATE receipt_oc_csv SET stage = 2 WHERE stage = 1;
+    END;
+$$;
+
+======================================

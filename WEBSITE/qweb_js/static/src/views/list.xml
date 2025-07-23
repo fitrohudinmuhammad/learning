@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="qweb_js.ListButtons" t-inherit="hr_expense.ListButtons">
+        <xpath expr="//button[hasclass('o_button_upload_expense')]" position="after">
+            <button type="button" class="d-none d-md-inline btn btn-secondary mx-1" t-on-click="onNewButtonClick">
+                New Button
+            </button>
+        </xpath>
+    </t>
+
+</template>

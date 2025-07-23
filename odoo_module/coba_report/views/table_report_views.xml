@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="table_report_view_tree" model="ir.ui.view">
+        <field name="name">table.report.view.tree</field>
+        <field name="model">table.report</field>
+        <field name="arch" type="xml">
+            <tree string="Table Report">
+                <field name="specific_date"/>
+                <field name="minutes_utilized"/>
+                <field name="percentage_of_utilization"/>
+                <field name="minutes_idle"/>
+                <field name="percentage_of_idle"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="table_report_action" model="ir.actions.act_window">
+        <field name="name">Table Report</field>
+        <field name="res_model">table.report</field>
+        <field name="view_mode">tree</field>
+        <field name="view_id" ref="table_report_view_tree"/>
+    </record>
+    
+    <menuitem
+        id="table_report_menu"
+        name="Table Report"
+        action="table_report_action"
+        parent="table_configuration_menus"
+        sequence="4"/>
+</odoo>

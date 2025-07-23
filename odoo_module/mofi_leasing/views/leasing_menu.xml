@@ -1,0 +1,61 @@
+<odoo>
+
+    <!-- This Menu Item will appear in the Upper bar, that's why It needs NO parent or action -->
+    <menuitem
+        id="mofi_leasing_menu_root"
+        name="Leasing"
+        sequence="70"
+        groups="group_leasing_user"
+        web_icon="mofi_leasing,static/src/description/icon_leasing.png"
+        />
+
+    <menuitem
+        id="menu_leasing_menubar"
+        parent="mofi_leasing_menu_root"
+        name="Leasing"
+        groups="group_leasing_user"
+        >
+        <menuitem
+            id="leasing_contract_menu_categ"
+            name="Contract"
+            groups="group_leasing_user"
+            action="mofi_leasing.leasing_contract_action"/>
+        <menuitem
+            id="leasing_amortization_menu_categ"
+            name="Amortization"
+            groups="group_leasing_user"
+            action="mofi_leasing.leasing_amortization_action"
+            sequence="10"/>
+        <menuitem
+            id="leasing_debtor_menu"
+            name="Debtor"
+            groups="group_leasing_user"
+            action="mofi_leasing.leasing_contract_partner_action"
+            sequence="10"/>
+    </menuitem>
+
+    <menuitem
+        id="settings_leasing_menubar"
+        parent="mofi_leasing_menu_root"
+        name="Settings"
+        sequence="30"
+        >
+
+        <menuitem id="leasing_settings_leasing_account" name="Leasing Account" action="mofi_leasing.leasing_account_action" sequence="10"/>
+        <menuitem id="leasing_settings_master_data" name="Master Data" sequence="20">
+            <menuitem id="leasing_funding_type" name="Funding Type" action="mofi_leasing.leasing_funding_type_action"/>
+            <menuitem id="leasing_channel" name="Channel" action="mofi_leasing.leasing_channel_action" sequence="20"/>
+            <menuitem id="leasing_loan_purpose" name="Loan Purpose" action="mofi_leasing.leasing_loan_purpose_action" sequence="20"/>
+            <menuitem id="leasing_branch" name="Branch" action="mofi_leasing.leasing_branch_action" sequence="20"/>
+            <menuitem id="leasing_order_type" name="Order Type" action="mofi_leasing.leasing_order_type_action" sequence="20"/>
+            <menuitem id="leasing_suborder_type" name="SubOrder Type" action="mofi_leasing.leasing_suborder_type_action" sequence="20"/>
+            <menuitem id="leasing_fee_type" name="Fee Type" action="mofi_leasing.leasing_fee_type_action" sequence="20"/>
+            <menuitem id="leasing_payment_channel" name="Payment Channel" action="mofi_leasing.leasing_payment_channel_action" sequence="20"/>
+            <!-- <menuitem id="leasing_bank_account" name="Bank Account" action="mofi_leasing.leasing_bank_action" sequence="20"/> -->
+        </menuitem>
+
+
+    </menuitem>
+
+
+</odoo>

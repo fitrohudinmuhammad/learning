@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="cust_navbar" name="cust_Navbar" inherit_id="website.navbar">
+        <xpath expr="//nav" position="replace">
+            <nav data-name="Navbar" t-attf-class="navbar #{_navbar_expand_class} navbar-dark o_colored_level o_cc #{_navbar_classes}" style="background-color: #fff;">
+                <t t-out="0"/>
+            </nav>
+        </xpath>
+    </template>
+    <!-- <template id="add_menu_navbar" name="cust_Navbar" inherit_id="website.template_header_default">
+        <xpath expr="//t[@t-call='portal.placeholder_user_sign_in']" position="before">
+            <t t-call="ex_website.menu_dropdown">
+                <t t-set="_user_name" t-value="true"/>
+                <t t-set="_item_class" t-valuef="nav-item dropdown ms-lg-auto"/>
+                <t t-set="_link_class" t-valuef="nav-link fw-bold"/>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="menu_dropdown" name="Menu Dropdown">
+        <li t-attf-class="#{_item_class} o_no_autohide_item">
+            <a href="#" role="button" data-bs-toggle="dropdown" t-attf-class="dropdown-toggle #{_link_class}">Menu Dropdown</a>
+            <div t-attf-class="dropdown-menu #{_dropdown_menu_class}" role="menu">
+                <a groups="base.group_user" href="#" role="menuitem" class="dropdown-item ps-3">
+                    <i class="fa fa-fw fa-th me-1 small text-muted"/> Apps
+                </a>
+                <div class="dropdown-divider"/>
+                <a t-attf-href="#" role="menuitem" class="dropdown-item ps-3">
+                    <i class="fa fa-fw fa-sign-out me-1 small text-muted"/> Logout
+                </a>
+            </div>
+        </li>
+    </template> -->
+</odoo>

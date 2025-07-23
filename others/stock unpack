@@ -1,0 +1,345 @@
+INSERT INTO stock_unpack_transaction(stock_conversion_id, current_on_hand_qty, processed, src_move_id, dest_move_id, src_move_line_id, dest_move_line_id)
+SELECT 
+	conversion.id,
+	CASE 
+		WHEN uom_id = 21 
+			THEN
+				CASE
+					WHEN quant.quantity = 0 THEN 1 
+					ELSE ceil(abs(quant.quantity)/conversion.conversion_qty::decimal)
+				END
+		WHEN uom_id = 22
+			THEN
+				CASE
+					WHEN quant.quantity = 0 THEN 1 
+					ELSE ceil(abs(quant.quantity)/conversion.conversion_qty::decimal) * conversion.conversion_qty
+				END
+		ELSE 0
+	END as current_on_hand_qty,
+	False,
+	nextval('stock_move_id_seq') as src_move_id, 
+	nextval('stock_move_id_seq') as dest_move_id, 
+  nextval('stock_move_line_id_seq') as src_move_line_id,
+  nextval('stock_move_line_id_seq') as dest_move_line_id
+FROM
+	product_product pp
+	JOIN product_template pt on pt.id = pp.product_tmpl_id
+	JOIN stock_quant quant on quant.product_id = pp.id
+	JOIN stock_conversion conversion on conversion.destination_product_id = pp.id
+	JOIN uom_uom uom on uom.id = pt.uom_id
+	JOIN stock_location location on location.id = quant.location_id
+WHERE
+	quant.quantity < 0;
+
+
+-- MAPPING STOCK MOVE
+DROP FUNCTION IF EXISTS mapping_stock_move_stock_unpack_transaction (integer, integer);
+CREATE OR REPLACE FUNCTION public.mapping_stock_move_stock_unpack_transaction(location_id integer, location_dest_id integer)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+    
+    		-- Product packs
+    		INSERT INTO stock_move(
+          	id,
+            name, 
+            sequence, 
+            priority, 
+            date, 
+            company_id,
+            date_expected, 
+            product_id, 
+            product_qty, 
+            product_uom_qty, 
+            product_uom,
+            location_id, 
+            location_dest_id, 
+            note, 
+            state,
+            price_unit, 
+            origin, 
+            procure_method, 
+            scrapped, 
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT 
+          unpack.src_move_id,
+            '' as name, 
+            1, 
+            1, 
+            now(), 
+            1,
+            now(), 
+            conversion.source_product_id, 
+            abs(unpack.current_on_hand_qty), 
+            abs(unpack.current_on_hand_qty), 
+            pt.uom_id,
+            8, 
+            41, 
+            '', 
+            'done',
+            0, 
+            'Unpack product',
+            'make_to_stock', 
+            False, 
+
+            1, 
+            now(), 
+            1, 
+            now()
+
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+            JOIN product_product pp on pp.id = conversion.destination_product_id
+            JOIN product_template pt on pt.id = pp.product_tmpl_id
+        WHERE
+          unpack.processed = False;
+
+        INSERT INTO stock_move(
+          id,
+            name, 
+            sequence, 
+            priority, 
+            date, 
+            company_id,
+            date_expected, 
+            product_id, 
+            product_qty, 
+            product_uom_qty, 
+            product_uom,
+            location_id, 
+            location_dest_id, 
+            note, 
+            state,
+            price_unit, 
+            origin, 
+            procure_method, 
+            scrapped, 
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT 
+          unpack.dest_move_id,
+            '' as name, 
+            1, 
+            1, 
+            now(), 
+            1,
+            now(), 
+            conversion.destination_product_id, 
+            abs(unpack.current_on_hand_qty * conversion.conversion_qty), 
+            abs(unpack.current_on_hand_qty * conversion.conversion_qty), 
+            pt.uom_id,
+            41, 
+            8, 
+            '', 
+            'done',
+            0, 
+            'Unpack product',
+            'make_to_stock', 
+            False, 
+
+            1, 
+            now(), 
+            1, 
+            now()
+
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+            JOIN product_product pp on pp.id = conversion.source_product_id
+            JOIN product_template pt on pt.id = pp.product_tmpl_id
+        WHERE
+          unpack.processed = False;
+		END;
+$$;
+
+
+-- MAPPING STOCK MOVE LINE
+DROP FUNCTION IF EXISTS mapping_stock_move_line_stock_unpack_transaction (integer, integer);
+CREATE OR REPLACE FUNCTION public.mapping_stock_move_line_stock_unpack_transaction(location_id integer, location_dest_id integer)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+    
+        INSERT INTO stock_move_line(
+          	id,
+            move_id, 
+            company_id, 
+            product_id, 
+            product_uom_id,
+            product_qty, 
+            product_uom_qty, 
+            qty_done, 
+            date, 
+            location_id,
+            location_dest_id, 
+            state, 
+            reference, 
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT 
+            unpack.src_move_line_id,
+            unpack.src_move_id, 
+            1, 
+            conversion.source_product_id, 
+            pt.uom_id,
+            0, 
+            0, 
+            abs(unpack.current_on_hand_qty),
+            now(),
+            location_id, 
+            location_dest_id,
+            'done', 
+            'Unpack product', 
+
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+            JOIN product_product pp on pp.id = conversion.destination_product_id
+            JOIN product_template pt on pt.id = pp.product_tmpl_id
+        WHERE
+          unpack.processed = False;
+
+
+        INSERT INTO stock_move_line(
+            id, 
+            move_id,
+            company_id, 
+            product_id, 
+            product_uom_id,
+            product_qty, 
+            product_uom_qty, 
+            qty_done, 
+            date, 
+            location_id,
+            location_dest_id, 
+            state, 
+            reference,
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT 
+          	unpack.dest_move_line_id,
+            unpack.dest_move_id, 
+            1, 
+            conversion.destination_product_id, 
+            pt.uom_id,
+            0, 
+            0, 
+            abs(unpack.current_on_hand_qty * conversion.conversion_qty),
+            now(),
+            location_id, 
+            location_dest_id,
+            'done', 
+            'Unpack product', 
+
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+            JOIN product_product pp on pp.id = conversion.source_product_id
+            JOIN product_template pt on pt.id = pp.product_tmpl_id
+        WHERE
+          unpack.processed = False;
+
+    END;
+$$;
+
+
+DROP FUNCTION IF EXISTS mapping_stock_quant_stock_unpack_transaction (integer, integer);
+CREATE OR REPLACE FUNCTION public.mapping_stock_quant_stock_unpack_transaction(location_id integer, location_dest_id integer)
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+    
+    		-- UPDATE QUANT UNTUK PRODUCT PCS
+    		UPDATE stock_quant sq 
+        SET 
+            quantity = sq.quantity + (unpack.current_on_hand_qty * conversion.conversion_qty),
+            write_uid = 1, 
+            write_date = now()
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+        WHERE 
+            sq.product_id = conversion.destination_product_id AND
+            sq.location_id = location_id AND
+            unpack.processed = False;
+
+
+        -- PROCESS 1
+        -- INSERT STOCK QUANT UNTUK PRODUCT PACK
+        INSERT INTO stock_quant(
+            product_id, 
+            company_id, 
+            location_id, 
+            quantity,
+            reserved_quantity,
+            --
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date)
+        SELECT 
+            conversion.source_product_id, 
+            1, 
+            location_dest_id, 
+            unpack.current_on_hand_qty,
+            0,
+
+            1, 
+            NOW(), 
+            1, 
+            NOW()
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+            LEFT JOIN stock_quant sq ON 
+                sq.product_id = conversion.source_product_id AND
+              sq.location_id = location_dest_id
+        WHERE sq.id IS NULL AND
+          unpack.processed = False;
+
+				-- PROCESS 2
+        UPDATE stock_quant sq 
+        SET 
+            quantity = sq.quantity - unpack.current_on_hand_qty,
+            write_uid = 1, 
+            write_date = now()
+        FROM 
+            stock_unpack_transaction unpack
+            JOIN stock_conversion conversion on conversion.id = unpack.stock_conversion_id
+        WHERE 
+            sq.product_id = conversion.source_product_id AND
+            sq.location_id = location_id AND
+            unpack.processed = False;
+    
+ 		END;
+$$;
+

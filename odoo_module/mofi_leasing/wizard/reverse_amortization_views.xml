@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_mofi_reverse_amortization" model="ir.ui.view">
+            <field name="name">mofi.reverse.amortization.form</field>
+            <field name="model">mofi.reverse.amortization</field>
+            <field name="arch" type="xml">
+                <form string="Reverse">
+                    <group>
+                        <group>
+                            <field name="date_mode" string="Reversal Date" widget="radio"/>
+                        </group>
+                        <group>
+                        <field name="date" attrs="{'invisible': [('date_mode', '!=', 'custom')], 'required':[('date_mode', '=', 'custom')]}"/>
+                        </group>
+                    </group>
+                    <strong>
+                        <br/>This action will:<br/>
+                        1. Reverse all posted journal entries<br/>
+                        2. Canceled all unposted journal entries<br/>
+                        3. Set the Amortization status to Draft<br/>
+                    </strong>
+                    <footer>
+                        <button string='Reverse' name="reverse_moves" type="object" class="btn-primary" data-hotkey="q"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel" data-hotkey="z"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_view_mofi_reverse_amortization" model="ir.actions.act_window">
+            <field name="name">Reverse Journal</field>
+            <field name="res_model">mofi.reverse.amortization</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_mofi_reverse_amortization"/>
+            <field name="target">new</field>
+            <field name="binding_model_id" ref="mofi_leasing.model_mofi_leasing_amortization" />
+            <field name="binding_view_types">list</field>
+        </record>
+    </data>
+</odoo>

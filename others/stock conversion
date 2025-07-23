@@ -1,0 +1,100 @@
+DROP TABLE master_data_stock_conversion cascade;
+CREATE TABLE master_data_stock_conversion(
+stock_conversion_id	integer,
+product_code varchar,
+product_code_conversion	varchar,
+conversion_qty	float,
+need_create	boolean,
+need_update	boolean,
+type	varchar,
+level	smallint,
+unique_key	varchar,
+create_date	timestamp default now,
+unique(product_code, product_code_conversion)
+);
+
+DROP TABLE forecastplan;
+CREATE TABLE forecastplan(
+customer_id varchar,
+item_id varchar,
+location_id varchar,
+startdate timestamp,
+enddate timestamp,
+value jsonb
+);
+
+
+
+WITH stock_conversion_teraoka AS(
+SELECT 
+	ts.product_code, 
+	md.product_code_conversion,
+	md.unique_key,
+	md.type, 
+	md.level,
+	sum(ts.qty) as qty, 
+	md.conversion_qty,
+	sum(ts.qty) * md.conversion_qty as convert_qty
+FROM teraoka_sales_temp ts 
+JOIN master_data_stock_conversion md ON md.product_code = ts.product_code 
+GROUP BY ts.product_code, md.type, md.conversion_qty, md.product_code_conversion, md.unique_key, md.level
+ORDER BY md.unique_key, md.level
+)
+
+SELECT 
+	mdd.product_code, 
+	mdd.product_code_conversion,
+	mdd.unique_key,
+	mdd.type, 
+	mdd.level,
+	mdd.qty, 
+	sum(ts.qty),
+	md.conversion_qty,
+	mdd.conversion_qty,
+	case 
+		when mdd.type = '1_level' then sum(ts.qty) * md.conversion_qty
+		when mdd.type = '2_level' and mdd.level = 2 then sum(ts.qty) * md.conversion_qty
+		when mdd.type = '2_level' and mdd.level = 1 then (sum(ts.qty) * md.conversion_qty) * mdd.convert_qty
+		else null end as convert_qty
+FROM teraoka_sales_temp ts 
+JOIN master_data_stock_conversion md ON md.product_code = ts.product_code
+JOIN stock_conversion_teraoka mdd ON md.product_code = mdd.product_code
+GROUP BY mdd.product_code, mdd.type, mdd.conversion_qty, mdd.product_code_conversion, mdd.unique_key, mdd.level, mdd.qty, mdd.convert_qty, md.conversion_qty
+ORDER BY mdd.unique_key, mdd.level;
+---------------------------------
+
+WITH stock_conversion_teraoka AS(
+SELECT 
+	ts.product_code, 
+	md.product_code_conversion,
+	md.unique_key,
+	md.type, 
+	md.level,
+	sum(ts.qty) as qty, 
+	md.conversion_qty,
+	sum(ts.qty) * md.conversion_qty as convert_qty
+FROM teraoka_sales_temp ts 
+JOIN master_data_stock_conversion md ON md.product_code = ts.product_code 
+GROUP BY ts.product_code, md.type, md.conversion_qty, md.product_code_conversion, md.unique_key, md.level
+ORDER BY md.unique_key, md.level
+)
+
+SELECT 
+        mdd.product_code, 
+        mdd.product_code_conversion,
+        mdd.unique_key,
+        mdd.type, 
+        mdd.level,
+        mdd.qty, 
+        mdd.conversion_qty,
+	md.conversion_qty,
+	mdd.convert_qty,
+        case 
+                when mdd.type = '1_level' then sum(mdd.qty) * mdd.conversion_qty
+                when mdd.type = '2_level' and mdd.level = 2 then sum(mdd.qty) * md.conversion_qty
+                when mdd.type = '2_level' and mdd.level = 1 then (sum(mdd.qty) * md.conversion_qty) * mdd.convert_qty
+                else null end as convert_qty
+FROM master_data_stock_conversion md 
+JOIN stock_conversion_teraoka mdd ON md.product_code = mdd.product_code_conversion 
+GROUP BY mdd.product_code, mdd.type, mdd.conversion_qty, mdd.product_code_conversion, mdd.unique_key, mdd.level, mdd.qty, md.conversion_qty, mdd.convert_qty
+ORDER BY mdd.unique_key, mdd.level;

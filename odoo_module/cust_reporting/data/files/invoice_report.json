@@ -1,0 +1,354 @@
+{
+    "version": 1,
+    "sheets": [{
+        "id": "sheet1",
+        "name": "Invoice Report",
+        "colNumber": 38,
+        "rowNumber": 1,
+        "rows": {},
+        "cols": {
+            "0": {"size": 100},
+            "1": {"size": 100},
+            "2": {"size": 100},
+            "3": {"size": 100},
+            "4": {"size": 100},
+            "5": {"size": 100},
+            "6": {"size": 100},
+            "7": {"size": 100},
+            "8": {"size": 100},
+            "9": {"size": 100},
+            "10": {"size": 100},
+            "11": {"size": 100},
+            "12": {"size": 100},
+            "13": {"size": 100},
+            "14": {"size": 100},
+            "15": {"size": 100},
+            "16": {"size": 100},
+            "17": {"size": 100},
+            "18": {"size": 100},
+            "19": {"size": 100},
+            "20": {"size": 100},
+            "21": {"size": 100},
+            "22": {"size": 100},
+            "23": {"size": 100},
+            "24": {"size": 100},
+            "25": {"size": 100},
+            "26": {"size": 100},
+            "27": {"size": 100},
+            "28": {"size": 100},
+            "29": {"size": 100},
+            "30": {"size": 100},
+            "31": {"size": 100},
+            "32": {"size": 100},
+            "33": {"size": 100},
+            "34": {"size": 100},
+            "35": {"size": 100},
+            "36": {"size": 100},
+            "37": {"size": 100}
+        },
+        "merges":[],
+        "cells":{
+            "A1": {"content": "No", "style": 1},
+            "B1": {"content": "Invoice ID", "style": 1},
+            "C1": {"content": "Product Name", "style": 1},
+            "D1": {"content": "Product Code", "style": 1},
+            "E1": {"content": "Salesperson", "style": 1},
+            "F1": {"content": "Customer Type", "style": 1},
+            "G1": {"content": "Customer Name", "style": 1},
+            "H1": {"content": "Partner REF", "style": 1},
+            "I1": {"content": "Invoice No", "style": 1},
+            "J1": {"content": "Invoice Date", "style": 1},
+            "K1": {"content": "Account ID", "style": 1},
+            "L1": {"content": "Quantity", "style": 1},
+            "M1": {"content": "Unit Price", "style": 1},
+            "N1": {"content": "Subtotal", "style": 1},
+            "O1": {"content": "Unit Cost", "style": 1},
+            "P1": {"content": "Total Price.", "style": 1},
+            "Q1": {"content": "Discount", "style": 1},
+            "R1": {"content": "Product Category (Full)", "style": 1},
+            "S1": {"content": "Product Category (Partial)", "style": 1}
+        }
+    }],
+    "styles": {
+        "1": {
+            "textColor": "#000000",
+            "bold": true,
+            "fontSize": 10
+        },
+        "2": {
+            "textColor": "#000000",
+            "bold": false,
+            "fontSize": 9
+        }
+    },
+    "lists": {
+        "3": {
+            "columns": [
+                "id",
+                "name",
+                "invoice_partner_display_name",
+                "invoice_date",
+                "invoice_date_due",
+                "activity_ids",
+                "amount_untaxed_signed",
+                "amount_total_signed",
+                "amount_total_in_currency_signed",
+                "payment_state",
+                "state"
+            ],
+            "domain": [],
+            "model": "account.move",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "3",
+            "name": "Invoices"
+        },
+        "4": {
+            "columns": [
+                "id",
+                "product_id",
+                "quantity",
+                "price_unit",
+                "price_subtotal",
+                "name"
+            ],
+            "domain": [],
+            "model": "account.move.line",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "4",
+            "name": "Invoices Line"
+        },
+        "5": {
+            "columns": [
+                "id",
+                "name",
+                "default_code",
+                "standard_price",
+                "list_price"
+            ],
+            "domain": [[
+                "active",
+                "in",
+                [
+                    true,
+                    false
+                ]
+            ]],
+            "model": "product.template",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "5",
+            "name": "Products"
+        },
+        "6": {
+            "columns": [
+                "id",
+                "name",
+                "default_location_destination_id"
+            ],
+            "domain": [],
+            "model": "operating.unit",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "6",
+            "name": "Operating Unit"
+        },
+        "7": {
+            "columns": [
+                "id",
+                "name"
+            ],
+            "domain": [
+                [
+                    "active",
+                    "in",
+                    [
+                        true,
+                        false
+                    ]
+                ]
+            ],
+            "model": "res.users",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "7",
+            "name": "Users"
+        },
+        "8": {
+            "columns": [
+                "id",
+                "name",
+                "type"
+            ],
+            "domain": [],
+            "model": "res.partner",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "8",
+            "name": "Partner"
+        },
+        "9": {
+            "columns": [
+                "id",
+                "name",
+                "default_code"
+            ],
+            "domain": [
+                [
+                    "active",
+                    "in",
+                    [
+                        true,
+                        false
+                    ]
+                ]
+            ],
+            "model": "product.product",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "9",
+            "name": "Products"
+        },
+        "10": {
+            "columns": [
+                "id",
+                "name",
+                "code"
+            ],
+            "domain": [],
+            "model": "account.account",
+            "context": {},
+            "orderBy": [
+                {
+                    "name": "id",
+                    "asc": true
+                }
+            ],
+            "id": "10",
+            "name": "Account Account"
+        }
+    },
+    "chartOdooMenusReferences": {},
+    "globalFilters": [
+        {
+            "id": "filt1",
+            "type": "date",
+            "label": "Date",
+            "defaultValue": "",
+            "rangeType": "from_to",
+            "defaultsToCurrentPeriod": false,
+            "pivotFields": {
+                "1": {
+                    "field": "invoice_date",
+                    "type": "datetime"
+                }
+            },
+            "listFields": {
+                "1": {
+                    "field": "invoice_date",
+                    "type": "datetime"
+                }
+            },
+            "graphFields": {
+                "graph1": {
+                    "field": "invoice_date",
+                    "type": "datetime"
+                }
+            }
+        },
+        {
+            "id": "filt3",
+            "type": "relation",
+            "label": "Branch/Location",
+            "modelName": "operating.unit",
+            "defaultValue": [],
+            "defaultValueDisplayNames": [],
+            "rangeType": "year",
+            "defaultsToCurrentPeriod": false,
+            "pivotFields": {
+                "1": {
+                    "field": "operating_unit_id",
+                    "type": "many2one"
+                }
+            },
+            "listFields": {
+                "1": {
+                    "field": "operating_unit_id",
+                    "type": "many2one"
+                }
+            },
+            "graphFields": {
+                "graph3": {
+                    "field": "operating_unit_id",
+                    "type": "many2one"
+                }
+            }
+        },
+        {
+            "id": "filt4",
+            "type": "relation",
+            "label": "Salesperson",
+            "modelName": "res.users",
+            "defaultValue": [],
+            "defaultValueDisplayNames": [],
+            "rangeType": "year",
+            "defaultsToCurrentPeriod": false,
+            "pivotFields": {
+                "1": {
+                    "field": "user_id",
+                    "type": "many2one"
+                }
+            },
+            "listFields": {
+                "1": {
+                    "field": "user_id",
+                    "type": "many2one"
+                }
+            },
+            "graphFields": {
+                "graph4": {
+                    "field": "user_id",
+                    "type": "many2one"
+                }
+            }
+        }
+    ],
+    "settings": {"locale": {"name": "English (US)", "code": "en_US", "thousandsSeparator": ",", "decimalSeparator": ".", "dateFormat": "mm/dd/yyyy", "timeFormat": "hh:mm:ss", "formulaArgSeparator": ","}},
+    "revisionId": "START_REVISION"
+}

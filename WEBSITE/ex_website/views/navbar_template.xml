@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <template id="cust_navbar_layout" name="Custom Navbar" inherit_id="website.template_header_image">
+        <xpath expr="//div[@id='top_menu_container']" position="before">
+        </xpath>
+    </template>
+</odoo>

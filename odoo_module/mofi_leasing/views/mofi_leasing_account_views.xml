@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="mofi_leasing_accoount_view_tree" model="ir.ui.view">
+        <field name="name">mofi.leasing.account.view.tree</field>
+        <field name="model">mofi.leasing.account</field>
+        <field name="arch" type="xml">
+            <tree string="Leasing Account" editable="bottom">
+                <!-- Add your fields here -->
+                <field name="name" invisible="0"/>
+                <field name="funding_type_id" required="1"/>
+                <field name="channel_id" required="1"/>
+                <field name="loan_purpose_id" required="1"/>
+                <field name="is_restructure" required="1"/>
+                <field name="fee_type_id" required="1"/>
+                <field name="account_journal_id" required="1"/>
+                <field name="debit_account_id" required="1"/>
+                <field name="credit_account_id" required="1"/>
+                <field name="amortization" readonly="1" optional="hide"/>
+                <field name="journal_amortization_id" readonly="1" optional="hide"/>
+                <field name="debit_account_amortization_id" optional="hide"/>
+                <field name="credit_account_amortization_id" optional="hide"/>
+                <field name="active" optional="hide"/>
+            </tree>
+        </field>
+    </record>
+
+</odoo>

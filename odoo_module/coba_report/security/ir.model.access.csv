@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_table_a,access.access_table_a,coba_report.model_table_a,base.group_user,1,1,1,1
+access_table_b,access.access_table_b,coba_report.model_table_b,base.group_user,1,1,1,1
+access_table_report,access.access_table_report,coba_report.model_table_report,base.group_user,1,1,1,1

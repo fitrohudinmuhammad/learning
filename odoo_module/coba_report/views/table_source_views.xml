@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem name="Table Source" id="menu_table_root" sequence="141"
+        groups="base.group_user"
+        web_icon="coba_report,static/description/icon.svg"/>
+
+    <menuitem
+        id="table_source_menus"
+        name="Sources"
+        parent="menu_table_root"
+        sequence="1"/>
+        
+    <menuitem
+        id="table_configuration_menus"
+        name="Configuration"
+        parent="menu_table_root"
+        sequence="2"/>
+</odoo>

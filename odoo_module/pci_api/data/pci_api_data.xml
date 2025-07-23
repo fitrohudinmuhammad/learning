@@ -1,0 +1,31 @@
+<odoo noupdate="1">
+    <record id="api_handler" model="pci.api.handler">
+        <field name="name">API Configuration</field>
+        <field name="root_user">1</field>
+        <field name="access_all_endpoints">1</field>
+    </record>
+
+    <record id="mt_request_failed" model="mail.message.subtype">
+        <field name="name">Request Failed</field>
+        <field name="res_model">pci.api.handler.log</field>
+        <field name="default" eval="True" />
+    </record>
+
+    <record id="ir_cron_autovacuum_api_log" model="ir.cron">
+        <field name="name">AutoVacuum API Logs</field>
+        <field name="model_id" ref="model_pci_api_handler_log"/>
+        <field name="active" eval="True"/>
+        <field name="user_id" ref="base.user_root" />
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field eval="False" name="doall" />
+        <field name="state">code</field>
+        <field name="code">
+# You can add 2 argumets to the autovacuum function
+# days=XX - it will be the number of days we keep the logs - by default 10 days
+# batch=XXX - it's the number of element that we delete in one loop - by default 1000
+model.autovacuum()
+        </field>
+    </record>
+</odoo>

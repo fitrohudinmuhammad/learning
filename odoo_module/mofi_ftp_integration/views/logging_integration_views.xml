@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<odoo>
+    <data>
+        <record id="logging_integration_tree_view" model="ir.ui.view">
+            <field name="name">logging.integration.tree.view</field>
+            <field name="model">logging.integration</field>
+            <field name="arch" type="xml">
+                <tree create="false" edit="false">
+                    <field name="name" string="Message Status"/>
+                    <field name="order_fee_id" attrs="{'invisible':[('error_status', '=', False)]}"/>
+                    <field name="row_id" attrs="{'invisible':[('error_status', '=', False)]}"/>
+                    <field name="error_status" invisible="True"/>
+                    <field name="filename"/>
+                    <field name="receive_date"/>
+                    <field name="receive_status"/>
+                    <field name="description"/>
+                    <field name="src_number_of_rows" string="Source Number of Rows"/>
+                    <field name="dest_number_of_rows" string="Destination Number of Rows"/>
+                    <field name="log_time"/>
+                    <field name="active" optional="hide"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="logging_integration_form_view" model="ir.ui.view">
+            <field name="name">logging.integration.form.view</field>
+            <field name="model">logging.integration</field>
+            <field name="arch" type="xml">
+                <form create="false" edit="false">
+                    <sheet>
+                        <group>
+                            <field name="name" string="Message Status"/>
+                            <field name="order_fee_id" attrs="{'invisible':[('error_status', '=', False)]}"/>
+                            <field name="row_id" attrs="{'invisible':[('error_status', '=', False)]}"/>
+                            <field name="filename"/>
+                            <field name="receive_date"/>
+                            <field name="receive_status"/>
+                            <field name="description"/>
+                            <field name="src_number_of_rows" string="Source Number of Rows"/>
+                            <field name="dest_number_of_rows" string="Destination Number of Rows"/>
+                            <field name="log_time"/>
+                            <field name="error_status"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="logging_integration_search_view" model="ir.ui.view">
+            <field name="name">logging.integration.search.view</field>
+            <field name="model">logging.integration</field>
+            <field name="arch" type="xml">
+                <search>
+                    <field name="name"/>
+                    <field name="order_fee_id"/>
+                    <field name="filename"/>
+                    <field name="description"/>
+                    <field name="log_time"/>
+                    <filter name="filter_success_only" string="Success Only" domain="[('error_status', '=', False)]"/>
+                    <filter name="filter_error_only" string="Error Only" domain="[('error_status', '=', True)]"/>
+                    <group expand="1" string="Group By">
+                        <filter string="Filename" name='filename' context="{'group_by':'filename'}"/>
+                    </group>
+                </search>
+            </field>
+        </record>
+
+        <record id="action_logging_integration" model="ir.actions.act_window">
+            <field name="name">Logging Integration</field>
+            <field name="res_model">logging.integration</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{'search_default_filter_error_only':1}</field>
+            <field name="search_view_id" ref="logging_integration_search_view"/>
+            <field name="help"></field>
+        </record>
+
+        <!-- <menuitem id="menu_logging_integration" name="Users &amp; Companies" parent="menu_administration" sequence="1"/> -->
+        <menuitem action="action_logging_integration" id="menu_logging_integration" parent="base.menu_administration" sequence="1"/>
+    </data>
+</odoo>

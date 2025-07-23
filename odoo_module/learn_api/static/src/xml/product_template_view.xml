@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates id="template" xml:space="preserve">
+
+    <t t-extend="ListView.buttons" t-name="SentDataApi.Buttons">
+        <t t-jquery="div.o_list_buttons" t-operation="inside">
+            <button class="btn btn-primary" type="button">
+                Sent Data by API Button
+            </button>
+        </t>
+    </t>
+
+</templates>

@@ -1,0 +1,68 @@
+def pull_stock_data(params):
+    db = params.get("branch_db")
+    print(db)
+    conn = psycopg2.connect(
+        user=db.get("user"), 
+        password=db.get("password"),
+        host=db.get("host"),
+        port=db.get("port"),
+        database=db.get("database")
+    )
+    logger.info("success connect db")
+    cr = conn.cursor()
+    store_code = params.get('store_code')
+    branch_code = str(params.get('branch_code'))
+    initial_stock = params.get('initial_stock')
+    print(initial_stock, store_code)
+    if initial_stock:
+        stmt = ""
+        first_code = True
+        for code in store_code:
+            if not first_code:
+                stmt += "UNION"
+            else:
+                first_code = False
+            stmt += """
+            (WITH filtered AS (
+            SELECT product_code,qty
+            FROM stock_quant_by_store
+            WHERE store_code = '%s'
+            )
+            SELECT %s, '%s',m.product_jan_1,
+            case when s.qty IS NULL then 0::integer when s.qty < 0 then 0::integer else FLOOR(s.qty)::integer end 
+            FROM master_data_product m
+            LEFT JOIN filtered s ON s.product_code = m.product_code 
+            WHERE TRIM(m.product_jan_1) != '' AND m.product_jan_1 IS NOT NULL)
+            """ % (code, branch_code, code)
+        cr.execute(stmt)
+    else:
+        if len(store_code) > 0:
+            print('sini')
+            cr.execute("""
+            with updated as (
+            update stock_quant_by_store set qty_updated = 'f'
+            where qty_updated = 't' AND store_code in %s
+            returning store_code, product_code, case when qty < 0 then 0::integer else FLOOR(qty)::integer end as qty
+            )
+            select """ + branch_code + """, u.store_code,m.product_jan_1,u.qty
+            from updated u left join master_data_product m 
+            on u.product_code = m.product_code 
+            where TRIM(m.product_jan_1) != '' AND m.product_jan_1 IS NOT NULL
+            """, ('0257','0253'))
+        else:
+            cr.execute("""
+            with updated as (
+            update stock_quant_by_store set qty_updated = 'f'
+            where qty_updated = 't'
+            returning store_code, product_code, case when qty < 0 then 0::integer else FLOOR(qty)::integer end as qty
+            )
+            select """ + branch_code + """, u.store_code,m.product_jan_1,u.qty
+            from updated u left join master_data_product m 
+            on u.product_code = m.product_code 
+            where TRIM(m.product_jan_1) != '' AND m.product_jan_1 IS NOT NULL
+            """)
+    data = cr.fetchall()
+    conn.commit()
+    cr.close()
+    conn.close()
+    return data

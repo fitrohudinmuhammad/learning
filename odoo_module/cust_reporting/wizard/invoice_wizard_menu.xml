@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_invoice_report_spreadsheets"
+        name="Spreadsheet"
+        groups="account.group_account_invoice"
+        parent="account.menu_finance_reports"
+        sequence="34">
+
+        <menuitem id="menu_invoice_report"
+            name="Invoice Report"
+            action="cust_reporting.invoice_report_wizard_action"
+            sequence="10"
+            />
+    </menuitem>
+    <menuitem id="menu_invoice_report_xlsx"
+        name="Xlsx"
+        groups="account.group_account_invoice"
+        parent="account.menu_finance_reports"
+        sequence="34">
+
+        <menuitem id="menu_invoice_reports_xlsx"
+            name="Invoice Report Xlsx"
+            action="cust_reporting.invoice_report_xlsx_wizard_action"
+            sequence="10"
+            />
+    </menuitem>
+</odoo>

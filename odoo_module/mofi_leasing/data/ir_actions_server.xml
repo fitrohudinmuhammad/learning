@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- amortisasi -->
+    <record id="action_active_model_amortization" forcecreate="True" model="ir.actions.server">
+        <field name="name">Active</field>
+        <field name="model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_compute_amortization'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+        if records:
+            res = records.button_active()
+            if isinstance(res, dict):
+                action = res
+        </field>
+    </record>
+    <record id="action_active_no_calculate_amortization" model="ir.actions.server">
+        <field name="name">Active without Calculate</field>
+        <field name="model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="binding_view_types">tree</field>
+        <field name="groups_id" eval="[(6,0,[ref('mofi_leasing.group_leasing_user')])]"/>
+        <field name="state">code</field>
+        <field name="code">
+        if records:
+            for rec in records:
+                res = rec.button_active_no_calculate()
+                if isinstance(res, dict):
+                    action = res
+        </field>
+    </record>
+    <record id="action_model_amortization_entries_wizard" model="ir.actions.server">
+        <field name="name">Generate Amortization Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_mofi_leasing_amortization"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager')), ]"/>
+        <field name="state">code</field>
+        <field name="code">
+        if records:
+            for rec in records:
+                res = rec.generate_journal_entries_with_sql()
+                if isinstance(res, dict):
+                    action = res
+        </field>
+    </record>
+    <!-- leasing contract -->
+    <record id="action_model_leasing_contract_wizard" model="ir.actions.server">
+        <field name="name">Generate Loan Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.call_loan_entries_wizard()
+        </field>
+    </record>
+    <record id="action_model_payment_leasing_contract_wizard" model="ir.actions.server">
+        <field name="name">Generate Payment Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.call_payment_entries_wizard()
+        </field>
+    </record>
+    <record id="action_model_leasing_contract_reconcile" model="ir.actions.server">
+        <field name="name">Reconcile Loan Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.with_context({'source':'orm'}).action_reconcile_loan_entries()
+        </field>
+    </record>
+    <record id="action_model_leasing_payment_reconcile" model="ir.actions.server">
+        <field name="name">Reconcile Payment Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.with_context({'source':'orm'}).action_reconcile_payment_entries()
+        </field>
+    </record>
+
+    <record id="action_model_interest_entries_wizard" model="ir.actions.server">
+        <field name="name">Generate Interest Entries</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = records.call_interest_entries_wizard()
+        </field>
+    </record>
+    <record id="action_model_generate_amortization_action" model="ir.actions.server">
+        <field name="name">Generate Amortization</field>
+        <field name="model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <field name="binding_model_id" ref="mofi_leasing.model_leasing_contract"/>
+        <!-- <field name="groups_id" eval="[(4, ref('mofi_leasing.group_leasing_manager'))]"/> -->
+        <field name="groups_id" eval="[(4, ref('mofi_leasing.group_compute_amortization'))]"/>
+        <field name="state">code</field>
+        <field name="code">
+        if records:
+            for rec in records:
+                res = rec.generate_amortization()
+                if isinstance(res, dict):
+                    action = res
+
+        </field>
+    </record>
+</odoo>

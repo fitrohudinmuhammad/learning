@@ -1,0 +1,427 @@
+DROP TABLE IF EXISTS deliver_transactions_lot;
+CREATE TABLE deliver_transactions_lot(
+	id bigserial,
+	accounting_date timestamp,
+	quantity float,
+	unit_price float,
+	partner_id int,
+    warehouse_id int,
+    rule_id int,
+	
+    picking_id int,
+    picking_name varchar,
+    move_id int,
+    move_line_id int,
+    location_src_id int,
+    location_dest_id int,
+    picking_type_id int,
+    product_code varchar,
+    product_lot_code varchar,
+    uom_id int,
+    procure_method varchar,
+    product_quant_in float,
+    product_move_in float,
+    product_move_out float,
+    product_on_hand float,
+    sum_qty float,
+
+    unique(product_code)
+);
+
+DROP FUNCTION IF EXISTS generate_move_lot_serial();
+CREATE OR REPLACE FUNCTION public.generate_move_lot_serial()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        TRUNCATE deliver_transactions_lot;
+		
+		INSERT INTO deliver_transactions_lot (
+            accounting_date,
+            quantity,
+            unit_price,
+            partner_id,
+            warehouse_id,
+            rule_id,
+            
+            picking_id,
+            picking_name,
+            move_id,
+            move_line_id,
+            location_src_id,
+            location_dest_id,
+            picking_type_id,
+            product_code,
+            product_lot_code,
+            uom_id,
+            procure_method)
+		SELECT 
+			now(),
+			7,
+			1,
+			1,
+            sw.id,
+            sr.id,
+			
+			nextval('stock_picking_id_seq') as picking_id, 
+            CONCAT('ir_sequence_', lpad(sequence_id::varchar, 3, '0')) as name,
+			nextval('stock_move_id_seq') as move_id, 
+			nextval('stock_move_line_id_seq') as move_line_id,
+			sr.location_src_id, 
+			sr.location_id,
+            sr.picking_type_id,
+			'PL001',
+            'PL1001',
+			1,
+            sr.procure_method
+		FROM stock_warehouse sw 
+			JOIN stock_location_route slr ON slr.id  = sw.delivery_route_id 
+			JOIN stock_rule sr ON sr.route_id = slr.id
+            JOIN stock_picking_type spt ON spt.id = sr.picking_type_id 
+			WHERE sw.company_id = 1 
+                AND slr.active is true 
+                AND sr.active is true;
+
+        -- PERFORM deliver_main_process();
+	END;
+$$;
+
+DROP FUNCTION IF EXISTS deliver_main_process();
+CREATE OR REPLACE FUNCTION public.deliver_main_process()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        RAISE notice 'Create product on hand: IN PROGRESS..';
+        PERFORM mapping_product_on_hand_lot();
+        RAISE notice 'Create product on hand: FINISH';
+
+        RAISE notice 'Create stock picking: IN PROGRESS..';
+        PERFORM mapping_stock_picking_lot();
+        RAISE notice 'Create stock picking: FINISH';
+
+        -- mapping stock move
+        RAISE notice 'Create stock move: IN PROGRESS..';
+        PERFORM mapping_stock_move_lot();
+        RAISE notice 'Create stock move: FINISH';
+
+        RAISE notice 'Create linked move: IN PROGRESS..';
+        PERFORM generate_linked_move_table_lot();
+        RAISE notice 'Create linked move: FINISH';
+
+        -- mapping stock move line
+        RAISE notice 'Create stock move line: IN PROGRESS..';
+        PERFORM mapping_stock_move_line_lot();
+        RAISE notice 'Create stock move line: FINISH';
+
+        
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_product_on_hand_lot();
+CREATE OR REPLACE FUNCTION public.mapping_product_on_hand_lot()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    DECLARE
+        quant_in float;
+        move_out float;
+        move_in float;
+        qty_on_hand float;
+        dev_tran record;
+    begin
+        FOR dev_tran in select product_code, picking_id, product_lot_code, warehouse_id from deliver_transactions_lot
+        LOOP
+            RAISE NOTICE 'PRODUCT : %', dev_tran.product_code;
+
+            SELECT sum(sml.qty_done) FROM stock_move_line sml, stock_production_lot spl 
+            WHERE sml.lot_id = spl.id
+                AND sml.product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)  
+                AND sml.location_dest_id in (SELECT location_src_id FROM deliver_transactions_lot WHERE picking_id = dev_tran.picking_id)
+                AND sml.state = 'done' 
+            INTO move_in;
+            
+            RAISE NOTICE 'Move IN : %', move_in;
+
+            SELECT sum(sml.qty_done) FROM stock_move_line sml, stock_production_lot spl  
+            WHERE sml.lot_id = spl.id
+                AND sml.product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)  
+                AND sml.location_dest_id not in (SELECT location_src_id FROM deliver_transactions_lot WHERE picking_id = dev_tran.picking_id)
+                AND state = 'done' 
+            INTO move_out;
+
+            RAISE NOTICE 'Move OUT : %', move_out;
+
+            SELECT sum(sq.quantity) FROM stock_quant sq, product_product pp, stock_production_lot spl
+            WHERE pp.id = sq.product_id
+                AND spl.id = sq.lot_id
+                AND sq.product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)
+                AND sq.location_id in (SELECT location_src_id FROM deliver_transactions_lot WHERE picking_id = dev_tran.picking_id)
+            INTO quant_in;
+
+            RAISE NOTICE 'Quant IN : %', quant_in;
+
+            SELECT sum(sq.quantity) FROM stock_quant sq, product_product pp, stock_production_lot spl
+            WHERE pp.id = sq.product_id
+                AND spl.id = sq.lot_id
+                AND sq.product_id in (SELECT id FROM product_product WHERE default_code = dev_tran.product_code)
+                AND sq.location_id in (SELECT lot_stock_id FROM stock_warehouse WHERE id = dev_tran.warehouse_id)
+            INTO qty_on_hand;
+
+            IF qty_on_hand IS NULL THEN
+                qty_on_hand := 0;
+            END IF;
+
+            RAISE NOTICE 'Quant On Hand : %', qty_on_hand;
+
+            UPDATE deliver_transactions_lot 
+            SET product_quant_in = quant_in, 
+                product_move_out = move_out,
+                product_move_in = move_in,
+                product_on_hand = qty_on_hand
+            WHERE picking_id = dev_tran.picking_id;
+        END LOOP;
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS generate_linked_move_table_lot();
+CREATE OR REPLACE FUNCTION public.generate_linked_move_table_lot()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    DECLARE
+        counter int;
+        temp_data record;
+        moves_orig_id int;
+        moves_dest_id int;
+    BEGIN
+        FOR temp_data IN SELECT array_agg(id) as ids, count(*) as ln FROM deliver_transactions_lot GROUP BY product_lot_code
+		LOOP
+			raise notice 'check temp data %', temp_data;
+			counter := 1;
+			WHILE counter < temp_data.ln LOOP
+                SELECT move_id FROM deliver_transactions_lot dt WHERE id = temp_data.ids[counter] INTO moves_orig_id;
+                SELECT move_id FROM deliver_transactions_lot dt WHERE id = temp_data.ids[counter+1] INTO moves_dest_id;
+            
+                INSERT INTO stock_move_move_rel (move_orig_id, move_dest_id) VALUES (moves_orig_id, moves_dest_id);
+                counter := counter + 1;
+            END LOOP;
+		END LOOP;
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_picking_lot();
+CREATE OR REPLACE FUNCTION public.mapping_stock_picking_lot()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        INSERT INTO stock_picking(
+            id, 
+            name, 
+            origin, 
+            note, 
+            move_type, 
+            scheduled_date,
+            date, 
+            date_done, 
+            location_id, 
+            location_dest_id, 
+            picking_type_id,
+            company_id, 
+            user_id, 
+            state,
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT
+            picking_id,
+            CONCAT(ir.prefix, LPAD(nextval(dt.picking_name)::text, 5, '0')) as name,
+            'testing_lot',
+            '',
+            dt.procure_method,
+            accounting_date::timestamp,
+            accounting_date::timestamp,
+            accounting_date::timestamp,
+            dt.location_src_id, 
+            dt.location_dest_id, 
+            dt.picking_type_id, 
+            1, 
+            1, 
+            CASE
+                WHEN sequence_code = 'IN' THEN 'assigned'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand > 0 AND dt.quantity < product_on_hand THEN 'assigned'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand > 0 AND dt.quantity > product_on_hand THEN 'confirmed'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand = 0 THEN 'confirmed'
+                ELSE 'waiting' END as state,
+
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM deliver_transactions_lot dt
+        JOIN stock_picking_type spt ON spt.id = dt.picking_type_id
+        JOIN ir_sequence ir ON ir.id = spt.sequence_id
+        ON CONFLICT(id)
+        DO NOTHING;
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_move_lot();
+CREATE OR REPLACE FUNCTION public.mapping_stock_move_lot()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    BEGIN
+        INSERT INTO stock_move(
+            id, 
+            picking_id, 
+            name, 
+            sequence, 
+            priority, 
+            date, 
+            company_id,
+            product_id, 
+            product_qty, 
+            product_uom_qty, 
+            product_uom,
+            location_id, 
+            location_dest_id,
+            state,
+            price_unit, 
+            origin, 
+            procure_method, 
+            scrapped, 
+            picking_type_id,
+            reference,
+            warehouse_id,
+            rule_id,
+
+            create_uid, 
+            create_date, 
+            write_uid, 
+            write_date
+        )
+        SELECT
+            move_id,
+            picking_id,
+            CASE WHEN pt.default_code IS NULL THEN pt.name
+                ELSE CONCAT('[',pt.default_code,'] ',pt.name) end as name,
+            1, 
+            1, 
+            accounting_date::timestamp, 
+            1,
+            pp.id, 
+            abs(dt.quantity), 
+            abs(dt.quantity), 
+            dt.uom_id,
+            dt.location_src_id, 
+            dt.location_dest_id, 
+            CASE
+                WHEN sequence_code = 'IN' THEN 'assigned'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand > 0 AND dt.quantity < product_on_hand THEN 'assigned'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand > 0 AND dt.quantity > product_on_hand THEN 'confirmed'
+                WHEN procure_method = 'make_to_stock' AND product_on_hand = 0 THEN 'confirmed'
+                ELSE 'waiting' END as state,
+            pt.list_price, 
+            sp.origin, 
+            dt.procure_method, 
+            False, 
+            dt.picking_type_id,
+            sp.name,
+            dt.warehouse_id,
+            dt.rule_id,
+
+            1, 
+            now(), 
+            1, 
+            now()
+        FROM deliver_transactions_lot dt
+        JOIN stock_picking sp ON sp.id = dt.picking_id
+        JOIN stock_picking_type spt ON spt.id = dt.picking_type_id
+        JOIN product_product pp ON pp.default_code = dt.product_code
+        JOIN product_template pt ON pt.id = pp.product_tmpl_id
+        ON CONFLICT(id)
+        DO NOTHING;
+
+    END;
+$$;
+
+DROP FUNCTION IF EXISTS mapping_stock_move_line_lot();
+CREATE OR REPLACE FUNCTION public.mapping_stock_move_line_lot()
+RETURNS void
+LANGUAGE plpgsql
+AS $$
+    DECLARE
+        temp record;
+    BEGIN
+        FOR temp IN SELECT id FROM deliver_transactions_lot WHERE procure_method = 'make_to_stock'
+        LOOP
+            INSERT INTO stock_move_line(
+                id, 
+                picking_id, 
+                move_id, 
+                company_id, 
+                product_id, 
+                product_uom_id,
+                product_qty, 
+                product_uom_qty, 
+                qty_done, 
+                date, 
+                location_id,
+                location_dest_id, 
+                state, 
+                reference,
+                lot_id,
+
+                create_uid, 
+                create_date, 
+                write_uid, 
+                write_date
+            )
+            SELECT
+                move_line_id, 
+                picking_id, 
+                move_id, 
+                1, 
+                pp.id, 
+                dt.uom_id,
+                0, 
+                CASE 
+                    WHEN dt.quantity > product_on_hand THEN product_on_hand
+                    ELSE dt.quantity  
+                END as quantity,
+                0,
+                accounting_date::timestamp,
+                dt.location_src_id, 
+                dt.location_dest_id, 
+                CASE
+                    WHEN sequence_code = 'IN' THEN 'assigned'
+                    WHEN procure_method = 'make_to_stock' AND product_on_hand > 0 THEN 'assigned'
+                    WHEN procure_method = 'make_to_stock' AND product_on_hand = 0 THEN 'confirmed'
+                    ELSE 'waiting' END as state,
+                sp.name,
+                spl.id,
+
+                1, 
+                now(), 
+                1, 
+                now()
+
+            FROM deliver_transactions_lot dt
+            JOIN stock_picking sp ON sp.id = dt.picking_id
+            JOIN stock_picking_type spt ON spt.id = dt.picking_type_id
+            JOIN product_product pp ON pp.default_code = dt.product_code
+            JOIN stock_production_lot spl ON spl.product_id = pp.id AND spl.name = dt.product_lot_code
+            WHERE dt.id = temp.id
+            ON CONFLICT(id)
+            DO NOTHING; 
+        LOOP END;
+    END;
+$$;
+

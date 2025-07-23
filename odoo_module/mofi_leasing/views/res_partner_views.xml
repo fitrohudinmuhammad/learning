@@ -1,0 +1,30 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <!-- res.partner inherit form view -->
+    <record id="res_partner_inherit_view_from" model="ir.ui.view">
+        <field name="name">res.partner.inherit.view.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group/group[1]/span" position="before">
+                <field name="debtor_id"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="res_partner_inherit_button_view_from" model="ir.ui.view">
+        <field name="name">res.partner.inherit.view.form</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="sale.res_partner_view_buttons"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_view_sale_order']" position="before">
+                <button class="oe_stat_button" type="object" name="action_view_leasing"
+                    groups="mofi_leasing.group_leasing_user"
+                    icon="fa-usd">
+                    <field string="Leasing" name="leasing_count" widget="statinfo"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+
+</odoo>

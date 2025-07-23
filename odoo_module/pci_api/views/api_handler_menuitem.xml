@@ -1,0 +1,24 @@
+<odoo>
+    <menuitem
+        id="menu_pci_api"
+        name="API Information"
+        parent="base.menu_administration"
+        groups="group_pci_api_user"
+    />
+
+    <menuitem
+        id="menu_queue_job"
+        action="action_pci_api_handler_log"
+        sequence="10"
+        parent="menu_pci_api"
+        groups="group_pci_api_user"
+    />
+
+    <menuitem
+        id="menu_configuration_api"
+        action="action_pci_api_handler_configuration"
+        sequence="20"
+        parent="menu_pci_api"
+        groups="group_pci_api_manager"
+    />
+</odoo>

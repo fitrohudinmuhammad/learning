@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_invoices_txt" model="ir.actions.report">
+        <field name="name">Invoices Txt</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-text</field>
+        <field name="report_name">cust_reporting.report_invoices_tmpl</field>
+        <field name="report_file">cust_reporting.report_invoices_tmpl</field>
+        <field name="print_report_name">'%s.docx' % (object._get_report_invoices_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_invoices_html" model="ir.actions.report">
+        <field name="name">Invoices HTML</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-html</field>
+        <field name="report_name">cust_reporting.invoice_report_structure</field>
+        <field name="report_file">cust_reporting.invoice_report_structure</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_invoices_pdf_basic" model="ir.actions.report">
+        <field name="name">Invoices Pdf Basic Layout</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cust_reporting.invoice_report_pdf_basic</field>
+        <field name="report_file">cust_reporting.invoice_report_pdf_basic</field>
+        <field name="print_report_name">(object._get_report_invoices_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_invoices_pdf_internal" model="ir.actions.report">
+        <field name="name">Invoices Pdf Internal Layout</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cust_reporting.invoice_report_pdf_internal</field>
+        <field name="report_file">cust_reporting.invoice_report_pdf_internal</field>
+        <field name="print_report_name">(object._get_report_invoices_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_invoices_pdf_external" model="ir.actions.report">
+        <field name="name">Invoices Pdf External Layout</field>
+        <field name="model">account.move</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">cust_reporting.invoice_report_pdf_external</field>
+        <field name="report_file">cust_reporting.invoice_report_pdf_external</field>
+        <field name="print_report_name">(object._get_report_invoices_filename())</field>
+        <field name="binding_model_id" ref="account.model_account_move"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <record id="action_report_invoice_xlsx" model="ir.actions.report">
+        <field name="name">Invoice Xlsx Report</field>
+        <field name="model">invoice.report.xlsx.wizard</field>
+        <field name="report_type">xlsx</field>
+        <field name="report_name">cust_reporting.invoice_report_xlsx</field>
+        <field name="report_file">cust_reporting.invoice_report_xlsx</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

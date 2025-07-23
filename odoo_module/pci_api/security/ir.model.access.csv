@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pci_api_handler,access_pci_api_handler,model_pci_api_handler,base.group_user,1,0,0,0
+access_pci_api_handler_manager,access_pci_api_handler,model_pci_api_handler,pci_api.group_pci_api_manager,1,1,1,1
+access_pci_api_log_user,access_pci_api_log_user,model_pci_api_handler_log,pci_api.group_pci_api_user,1,1,0,0
+access_pci_api_log_manager,access_pci_api_log_manager,model_pci_api_handler_log,pci_api.group_pci_api_manager,1,1,0,1

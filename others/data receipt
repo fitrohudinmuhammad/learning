@@ -1,0 +1,170 @@
+CREATE OR REPLACE FUNCTION public.insert_data_receipt_oc()
+ RETURNS void
+ LANGUAGE plpgsql
+AS $function$
+ DECLARE
+  db_name VARCHAR;
+  db_port INTEGER;
+  db_host VARCHAR;
+  db_user VARCHAR;
+  db_password VARCHAR;
+  date_trans date;    BEGIN
+     -- get db link config
+     SELECT 
+   db_link_config.db_name,
+   db_link_config.db_port,
+   db_link_config.db_host,
+   db_link_config.db_user,   db_link_config.db_password INTO db_name, db_port, db_host, db_user, db_password
+  FROM db_link_config 
+  WHERE access_to = 'middleware';
+
+  FOR date_trans IN SELECT date_trunc('day', dd):: date
+        FROM generate_series
+                ( '2021-06-08'::timestamp
+                , '2021-07-08'::timestamp
+                , '1 day'::interval) dd
+        LOOP
+            raise notice 'Value: %', TO_CHAR(date_trans, 'YYYY/MM/DD');
+
+   -- process db link and insert data
+   insert into inventory_fact_temp(
+product_code,
+    store_code,
+    date_transaction,
+
+    receipt_qty,
+    receipt_value,
+    return_qty,
+    return_value,
+    transfer_in_qty,
+    transfer_in_value,
+    transfer_out_qty,
+    transfer_out_value
+   )
+SELECT 
+    rows.*
+   FROM dblink('dbname='||db_name||' port='||db_port||' host='||db_host||' user='||db_user||' password='||db_password||'',
+    format('select 
+      nyuka_sku_code,
+      case
+       when qty >= 0 then 
+        nyuka_ten_code
+       else 
+        shuka_ten_code
+      end as store_code,
+      nohn_bi::timestamp,
+      -----------------------------------------
+      --receipt
+      -----------------------------------------
+      -- receipt_qty
+      case
+       when den_betu_code::int >= 80 and den_betu_code::int <= 89 then
+        qty::float
+       else
+        0
+      end as receipt_qty,
+
+      -- receipt_value
+      case
+       when den_betu_code::int >= 80 and den_betu_code::int <= 89 then
+        qty::float * sir_hon_gen_tnk::float
+       else
+        0
+      end as receipt_value,
+
+      -----------------------------------------
+      --return
+      -----------------------------------------
+      -- return_qty
+      case
+       when den_betu_code::int >= 90 and den_betu_code::int <= 95 then
+        qty::float
+       else
+        0
+      end as return_qty,
+
+      -- return_value
+      case
+       when den_betu_code::int >= 90 and den_betu_code::int <= 95 then
+        qty::float * sir_hon_gen_tnk::float
+       else
+        0
+      end as return_value,
+      
+      -----------------------------------------
+      --transfer in 
+      -----------------------------------------
+      -- transfer_in_qty
+      case
+       when den_betu_code::int >= 74 and den_betu_code::int <= 79 then
+        case
+         when qty >= 0 then 
+          qty::float
+         else 
+          0
+        end
+       else
+        0
+      end as transfer_in_qty,
+
+      -- transfer_in_value
+      case
+       when den_betu_code::int >= 74 and den_betu_code::int <= 79 then
+        case
+         when qty >= 0 then 
+          qty::float * sir_hon_gen_tnk::float
+         else 
+          0
+        end
+       else
+        0
+      end as transfer_in_value,
+
+      -----------------------------------------
+      --transfer out
+      -----------------------------------------
+      -- transfer_out_qty
+      case
+       when den_betu_code::int >= 74 and den_betu_code::int <= 79 then
+        case
+         when qty >= 0 then 
+          0
+         else 
+          qty::float
+        end
+       else
+        0
+      end as transfer_out_qty,
+
+      -- transfer_out_value
+      case
+       when den_betu_code::int >= 74 and den_betu_code::int <= 79 then
+        case
+         when qty >= 0 then 
+          0
+         else 
+          qty::float * sir_hon_gen_tnk::float
+        end
+       else
+        0
+      end as transfer_out_value
+
+     from receipt_oc_done
+     WHERE stage = 3 and nohn_bi = %L', TO_CHAR(date_trans, 'YYYY/MM/DD'))
+   ) AS rows (
+     product_code varchar,
+     store_code varchar,
+     date_transaction timestamp,
+
+     receipt_qty float,
+     receipt_value float,
+     return_qty float,
+     return_value float,
+     transfer_in_qty float,
+     transfer_in_value float,
+     transfer_out_qty float,
+     transfer_out_value float
+   );
+  END LOOP;
+    END;
+$function$

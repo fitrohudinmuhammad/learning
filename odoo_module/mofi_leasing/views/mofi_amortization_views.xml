@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+        <record id="mofi_amortization_form_view" model="ir.ui.view">
+            <field name="name">mofi.leasing.amortization.form</field>
+            <field name="model">mofi.leasing.amortization</field>
+            <field name="arch" type="xml">
+                <form string="Amortization">
+                    <header>
+                        <button name="%(action_view_mofi_reverse_amortization)d" string="Draft" type="action" attrs="{'invisible': [('status','=','draft')]}" />
+                        <button name="button_active" string="Active" type="object" attrs="{'invisible': [('status','!=','draft')]}" groups="mofi_leasing.group_compute_amortization" />
+                        <button name="button_close" string="Close" type="object" attrs="{'invisible': [('status','!=', 'active')]}"/>
+                        <button name="button_cancel" string="Cancel" type="object" attrs="{'invisible': [('status','!=','draft')]}"/>
+                        <button name="button_calculate_amortization" string="Calculate" type="object" attrs="{'invisible': [('status','!=','draft')]}" groups="mofi_leasing.group_compute_amortization" />
+                        <button name="button_active_no_calculate" string="Active without Calculation" type="object" attrs="{'invisible': [('status','!=','draft')]}" />
+
+                        <field name="status" widget="statusbar" required="1"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button class="oe_stat_button" name="action_journal_list" type="object" icon="fa-bars">
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="journal_entries_count" widget="statinfo" nolabel="1" class="mr4"/>
+                                    </span>
+                                    <span class="o_stat_text">Entries</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="oe_title">
+                            <label for="name"/>
+                            <h1>
+                                <field name="name" required="1" placeholder="DEFI-001 - Incentive" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group name="contract_info">
+                                <field name="debtor_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="ca_contract_number_id" invisible="0" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="fee_type_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="channel_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="branch_id" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+
+                            </group>
+                            <group>
+                                <field name="total_amount" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="start_date" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="end_date" required="1" attrs="{'readonly': [('status', '!=', 'draft')]}"/>
+                                <field name="is_terminated" attrs="{'readonly': [('status', '!=', 'draft')]}" />
+                                <field name="termination_date" readonly="1"/>
+                            </group>
+                            <group groups="base.group_multi_company">
+                                <field name="company_id"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page name="amor_board" string="Amortization Board">
+                                <field name="amortization_line">
+                                    <tree string="Amortization Board" editable="bottom">
+                                        <field name="due_date"/>
+                                        <field name="order_date" required="1"/>
+                                        <field name="percen_accrual"/>
+                                        <field name="account_move_id" readonly="1"/>
+                                        <field name="amount"/>
+                                        <field name="company_id" groups="base.group_multi_company"/>
+                                        <field name="currency_id" invisible="1"/>
+                                    </tree>
+                                </field>
+                                <group name="total_amortization_amount" col="6" class="mt-2 mt-md-0">
+                                    <group colspan="4">
+                                        <!-- <field colspan="2" name="note" nolabel="1" placeholder="Terms and conditions..."/> -->
+                                    </group>
+                                    <group class="oe_subtotal_footer oe_right" colspan="2">
+                                        <field name="total_amortization_amount" nolabel="1" colspan="2" force_save="1"/>
+                                    </group>
+                                    <div class="clearfix"/>
+                                </group>
+                            </page>
+                        </notebook>
+
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                        <field name="activity_ids"/>
+                    </div>
+                </form>
+            </field>
+        </record>
+
+        <record id="mofi_leasing_amortization_tree_view" model="ir.ui.view">
+            <field name="name">mofi.leasing.amortization.tree</field>
+            <field name="model">mofi.leasing.amortization</field>
+            <field name="arch" type="xml">
+                <tree string="Amortization">
+                    <field name="name"/>
+                    <field name="ca_contract_number_id"/>
+                    <field name="total_amount"/>
+                    <field name="start_date"/>
+                    <field name="end_date"/>
+                    <field name="status"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="leasing_amortization_action" model="ir.actions.act_window">
+            <field name="name">Leasing Amortization</field>
+            <field name="res_model">mofi.leasing.amortization</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">
+                    There is no examples click here to add new ModelTitle.
+                </p>
+            </field>
+        </record>
+    </data>
+
+
+</odoo>

@@ -1,0 +1,103 @@
+DROP TABLE IF EXISTS ftp_server CASCADE;
+CREATE TABLE ftp_server(
+  id bigserial,
+  name varchar,
+  ftp_server_url varchar,
+  server_key varchar,
+  username varchar,
+  password varchar,
+  ftp_home_dir varchar,
+  ftp_transaction_dir varchar,
+  ftp_on_process_dir varchar,
+  local_transaction_dir varchar,
+  ftp_success_dir varchar,
+  ftp_anomaly_dir varchar,
+  ftp_duplicate_dir varchar
+);
+
+INSERT INTO 
+	ftp_server(name, ftp_server_url, server_key, username, password, ftp_home_dir, ftp_transaction_dir, ftp_on_process_dir, local_transaction_dir, ftp_success_dir, ftp_anomaly_dir, ftp_duplicate_dir) 
+VALUES ('FTP Disposal', 'usmh-fm.prod.apcod.jp', 'ftp_disposal', 'staging', 'staging', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/');
+
+DROP TABLE IF EXISTS odoo_server CASCADE;
+CREATE TABLE odoo_server(
+  id bigserial,
+  server_name varchar,
+  url varchar,
+  port varchar,
+  username varchar,
+  password varchar,
+  store_code varchar,
+  database_name varchar
+);
+
+===============
+DROP TABLE IF EXISTS ftp_server CASCADE;
+CREATE TABLE ftp_server(
+  id bigserial,
+  name varchar,
+  ftp_server_url varchar,
+  server_key varchar,
+  username varchar,
+  password varchar,
+  ftp_home_dir varchar,
+  ftp_transaction_dir varchar,
+  ftp_on_process_dir varchar,
+  local_transaction_dir varchar,
+  ftp_success_dir varchar,
+  ftp_anomaly_dir varchar,
+  ftp_duplicate_dir varchar
+);
+
+INSERT INTO 
+	ftp_server(name, ftp_server_url, server_key, username, password, ftp_home_dir, ftp_transaction_dir, ftp_on_process_dir, local_transaction_dir, ftp_success_dir, ftp_anomaly_dir, ftp_duplicate_dir) 
+VALUES 
+	('FTP ACCOUNT MASTER', 'localhost', 'ftp_maruetsu_account_master', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DC DELIVERY', 'localhost', 'ftp_maruetsu_dc_delivery_receipt', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DC SHIPMENT', 'localhost', 'ftp_maruetsu_dc_shipment', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DISPOSAL', 'localhost', 'ftp_maruetsu_disposal', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP INVENTORY', 'localhost', 'ftp_maruetsu_inventory_adjustment', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP MASTER PRODUCT', 'localhost', 'ftp_maruetsu_product', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP CATEGORY 1', 'localhost', 'ftp_maruetsu_product_category_level_1', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP CATEGORY 2', 'localhost', 'ftp_maruetsu_product_category_level_2', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP CATEGORY 3', 'localhost', 'ftp_maruetsu_product_category_level_3', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP PRODUCT JAN', 'localhost', 'ftp_maruetsu_product_jan', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP POS', 'localhost', 'ftp_maruetsu_pos_sale', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP PURCHASE', 'localhost', 'ftp_maruetsu_purchasing', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP REPORT', 'localhost', 'ftp_maruetsu_report', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP SINGLE', 'localhost', 'ftp_maruetsu_single_inventory', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP WAREHOUSE', 'localhost', 'ftp_maruetsu_warehouse', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP PRODUCT PRICELIST', 'localhost', 'ftp_maruetsu_vendor_pricelist', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP RENAME DC', 'localhost', 'ftp_rename_dc', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP RENAME TRANS', 'localhost', 'ftp_rename_transaction', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP RENAME MASTER', 'localhost', 'ftp_rename_master_data', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP RENAME REPORT', 'localhost', 'ftp_rename_report', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP CHECKLIST', 'localhost', 'ftp_integration_checklist', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP VALIDATE', 'localhost', 'ftp_integration_validation', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DUPLICATE DISPO', 'localhost', 'ftp_maruetsu_disposal_duplicate', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DUPLICATE INV', 'localhost', 'ftp_maruetsu_inventory_adjustment_duplicate', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DUPLICATE POS', 'localhost', 'ftp_maruetsu_pos_sale_duplicate', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DUPLICATE PURCHASE', 'localhost', 'ftp_maruetsu_purchasing_duplicate', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/'),
+  ('FTP DUPLICATE SINGLE', 'localhost', 'ftp_maruetsu_single_inventory_duplicate', 'avas', 'keamanan', '/inbound/', '/', '/on_process/', '/', '/success/', '/anomaly/', '/duplicate/');
+
+
+
+DROP TABLE IF EXISTS odoo_server CASCADE;
+CREATE TABLE odoo_server(
+  id bigserial,
+  server_name varchar,
+  url varchar,
+  port varchar,
+  username varchar,
+  password varchar,
+  store_code varchar,
+  database_name varchar
+);
+
+INSERT INTO 
+	odoo_server(server_name, url, port, username, password, store_code, database_name)
+VALUES 
+	('store', 'localhost', '5432', 'postgres', 'postgres', '', 'database_name', 'true')
+  
+  
+  

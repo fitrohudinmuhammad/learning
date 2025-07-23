@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record model="ir.ui.view" id="ftp_view_company_form">
+            <field name="name">xero.view.company.form</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook/page[1]" position="after">
+                    <page string="FTP">
+                        <separator name="configuration" string="Configuration"/>
+                        <notebook>
+                            <page name="ftp_config" string='FTP Config'>
+                                <sheet>
+                                    <div class="oe_title">
+                                        <span class="o_form_label">FTP Name</span>
+                                        <h1>
+                                            <field name="name_ftp" />
+                                        </h1>
+                                    </div>
+                                    <group>
+                                        <group>
+                                            <field name="host_ftp" attrs="{'required':['|', ('ftp_active','=',True), ('sftp_active','=',True)]}"/>
+                                            <field name="port_ftp" attrs="{'required':['|', ('ftp_active','=',True), ('sftp_active','=',True)]}"/>
+                                            
+                                        </group>
+                                        <group>
+                                            <field name="username_ftp" attrs="{'required':['|', ('ftp_active','=',True), ('sftp_active','=',True)]}"/>
+                                            <field name="password_ftp" attrs="{'required':['|', ('ftp_active','=',True), ('sftp_active','=',True)]}"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="ftp_active"/>
+                                        <field name="sftp_active"/>
+                                        <field name="private_selected" attrs="{'invisible': [('sftp_active', '=', False)]}"/>
+                                        <field name="private_key" attrs="{'invisible': [('private_selected', '=', False)], 'required':[('private_selected','=',True)]}"/>
+                                        <field name="private_key_pass" attrs="{'invisible': [('private_selected', '=', False)], 'required':[('private_selected','=',True)]}"/>
+                                    </group>
+                                </sheet>
+                            </page>
+                            <page string="Directory Configuration">
+                                <sheet>
+                                    <group>
+                                        <field name="local_directory"/>
+                                    </group>
+                                    <group>
+                                        <group>
+                                            <field name="ftp_home_dir" string="Home Directory"/>
+                                            <field name="ftp_inbound_dir" string="Inbound Directory"/>
+                                            <field name="ftp_duplicate_dir" string="Duplicate Directory"/>
+                                        </group>
+                                        <group>
+                                            <field name="ftp_on_process_dir" string="On Process Directory"/>
+                                            <field name="ftp_success_dir" string="Success Directory"/>
+                                            <field name="ftp_anomaly_dir" string="Anomaly Directory"/>
+                                        </group>
+                                    </group>
+                                    <group>
+                                        <field name="table_name" />
+                                        <field name="filename" />
+                                        <field name="columns" />
+                                    </group>
+                                </sheet>
+                            </page>
+                        </notebook>
+                    </page>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

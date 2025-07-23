@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+
+    <!-- form view -->
+    <record id="mofi_payment_channel_view_form" model="ir.ui.view">
+        <field name="name">mofi.payment.channel.view.form</field>
+        <field name="model">mofi.payment.channel</field>
+        <field name="arch" type="xml">
+            <form string="">
+                <sheet>
+                    <group>
+                        <group>
+                            <!-- <field name="name" invisible="0"/> -->
+                            <field name="name" required="1"/>
+                            <field name="code" required="1"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+
+
+                        <!-- Add your fields here -->
+
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!-- tree view -->
+
+    <record id="mofi_payment_channel_view_tree" model="ir.ui.view">
+        <field name="name">mofi.payment.channel.view.tree</field>
+        <field name="model">mofi.payment.channel</field>
+        <field name="arch" type="xml">
+            <tree>
+                <!-- Add your fields here -->
+                <field name="name" />
+                <field name="code" />
+                <field name="active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="leasing_payment_channel_action" model="ir.actions.act_window">
+        <field name="name">Payment Channel</field>
+        <field name="res_model">mofi.payment.channel</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+
+</odoo>

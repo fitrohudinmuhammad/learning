@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<odoo>
+    <record id="view_contract_termination_wizard" model="ir.ui.view">
+        <field name="name">mofi.contract.termintaion.wizard.form</field>
+        <field name="model">mofi.contract.termination</field>
+        <field name="arch" type="xml">
+            <form string="Contract Termination">
+                <sheet>
+                    <!-- <strong>One or several Order Date is on Lock Period. Please select the date below for Journal Entry</strong> -->
+                    <group>
+                        <field name="contract_id" invisible="1"/>
+                        <field name="termination_date" required="1"/>
+                        <field name="termination_note"/>
+                    </group>
+                    <strong>
+                        <br/>This action will:<br/>
+                        1. Delete all Unposted Interest Entries<br/>
+                        2. Delete all Unposted Amortization Entries<br/>
+                        3. Post a Termination Amortization Entries<br/>
+                        4. Set the Amortization status to Close<br/>
+                        5. Set the Leasing Contract status to Close<br/>
+                    </strong>
+                </sheet>
+                <footer>
+                    <button name="button_process_termination" string="Terminate" class="btn-primary" type="object"/>
+                    <button name="cancel" special="cancel" data-hotkey="z" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

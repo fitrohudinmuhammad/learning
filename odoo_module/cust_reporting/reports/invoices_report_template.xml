@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_invoices_tmpl"><t t-foreach="docs" t-as="moves"><t t-esc="moves._get_report_invoices_template()"/></t></template>
+
+    <template id="invoice_report_structure">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <t t-if="not lines">
+                    <span class="text-center o_mrp_report_info"><h1>Some of the Invoice selected are not posted yet</h1></span>
+                </t>
+                <t t-else="">
+                    <span class="text-start"><h1 class="o_mrp_header o_mrp_header1">Invoice Analysis Report</h1></span>
+                </t>
+                
+                <t t-foreach="lines" t-as="line">
+                    <t t-set="currency" t-value="line['currency']"/>
+                    <t t-set="tot_scrap_cost" t-value="0.0"/>
+
+                    <!-- Title -->
+                    <br/>
+                    <strong class="o_mrp_report_info">
+                        <strong t-esc="line['product'].display_name"/>, <t t-esc="line['qty']"/> <t t-esc="line['product'].uom_id.name"/>, from <t t-esc="line['mocount']"/> invoices.
+                    </strong>
+                    <div><br/></div>
+
+                    <!-- Cost Structure table -->
+                    <h3 class="o_mrp_header o_mrp_table_header">Cost of Products`</h3>
+                    <table class="table table-sm o_mrp_report_table">
+                        <thead>
+                            <tr class="o_mrp_report_header">
+                                <th class="o_mrp_report_line_header"><span>Product</span></th>
+                                <th class="text-end o_mrp_report_line_header"><span>Quantity</span></th>
+                                <th class="text-end o_mrp_report_line_header"><span>Unit Cost</span></th>
+                                <th class="text-end o_mrp_report_line_header"><span>Total Cost</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="line['raw_material_moves']" t-as="m" class="text-muted">
+                                <td>
+                                    <span
+                                        class="o_mrp_reports_web_action" t-esc="m['product_id'].display_name" view-type="form"
+                                        t-att-res-id="m['product_id'].id"
+                                        res-model="product.product"/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-esc="m['qty']" t-options='{"widget": "float", "decimal_precision": "Product Unit of Measure"}'/>
+                                    <span t-esc="m['product_id'].uom_id.name"/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-esc="m['cost'] / m['qty'] if m['qty'] else m['cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                </td>
+                                <td class="text-end">
+                                    <span t-esc="m['cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                </td>
+                            </tr>
+                            <tr t-if="line['qty'] &gt; 1" >
+                                <td colspan="3" class="text-end">
+                                    <strong>Cost of Product per unit (in <t t-esc="line['product'].uom_id.name"/>)</strong>
+                                </td>
+                                <td class="text-end">
+                                    <span t-esc="line['total_cost'] / line['qty']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Cost table -->
+                    <div class="row">
+                        <div class="col-6 offset-6">
+                            <table class="table table-sm o_mrp_report_table">
+                                <tr t-if="line['qty'] &gt; 1">
+                                    <td class="text-end">
+                                        <strong>Total Products Cost</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <strong t-esc="line['total_cost']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end">
+                                        <strong>Total Cost per unit (in <t t-esc="line['product'].uom_id.name"/>)</strong>
+                                    </td>
+                                    <td class="text-end">
+                                        <span t-esc="line['total_cost'] / line['qty']" t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <template id="invoice_report_pdf_basic">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <h2>Invoice Report PDF with Basic Layout</h2>
+            </div>
+        </t>
+    </template>
+
+    <template id="invoice_report_pdf_internal">
+        <t t-call="web.html_container">
+            <t t-call="web.internal_layout">
+                <div class="page">
+                    <h2>Invoice Report PDF with Internal Layout</h2>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <template id="invoice_report_pdf_external">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Invoice Report PDF with External Layout</h2>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

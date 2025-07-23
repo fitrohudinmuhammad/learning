@@ -1,0 +1,287 @@
+
+POS_SALE_HEADER = [
+    "tenant_classification", 
+    "cash_register_no", 
+    "transaction_series_no",
+    "transaction_date_start", 
+    "transaction_time_start", 
+    "regimai_identification",
+    "return_identification", 
+    "division_code", 
+    "store_code", 
+    "date_of_the_day_of_the_cis_tube", 
+    "sales_amount_main_price", 
+    "quantity",
+    "decimal_point", 
+    "registration_details_identification", 
+    "product_registration_operation_detailed_identification",
+    "product_code_valid_number",
+    "product_code", 
+    "gift_identification", 
+    "query_code_class",
+    "inquiry_code_department", 
+    "inquiry_code_single_item", 
+    "mission_sea_os_flag", 
+    "sale_flag",
+    "bundle_type", 
+    "time_sale_flag", 
+    "bundle_no", 
+    "number_of_sets_1",
+    "set_price_1", 
+    "number_of_establishments_1", 
+    "discount_amount_1",
+    "number_of_sets_2", 
+    "set_price_2", 
+    "number_of_establishments_2",
+    "discount_amount_2", 
+    "number_of_sets_3", 
+    "set_price_3", 
+    "number_of_establishments_3", 
+    "discount_amount_3", 
+    "with_or_without_discount_1",
+    "with_or_without_discount_2", 
+    "stocon", 
+    "single_item_discount_1", 
+    "product_group_discount_1", 
+    "bundle", 
+    "single_item_discount_2", 
+    "product_group_discount_2", 
+    "otome", 
+    "subtotal_discount_1", 
+    "subtotal_discount_2", 
+    "usage_unit_price", 
+    "plan_no",
+    "current_selling_price", 
+    "business_day", 
+    "div", 
+    "omc_preferential_treatment_flag",
+    "tax_type_selling_price", 
+    "tax_rate", 
+    "store_food_and_drink_flag",
+    "line_feed_code",
+    "file_name",
+    "create_date",
+    "time",
+    "transaction_datetime_start",
+    "code_upc2",
+    "code_41",
+    "code_upc1",
+    "code_33",
+    "class_code",
+    "already_process_calculate"    
+]
+
+
+class PosSaleFTPController(ftp_controller.FTPController):
+    def __init__(self, task=None):
+        super(PosSaleFTPController, self).__init__(task=task)
+        self.transaction_directory = "/"
+        self.on_process_directory = "/on_process/"
+        self.success_directory = "/"
+        self.csv_header = POS_SALE_HEADER
+        self.pos_file = ['GUT009P', 'GUT010P', 'GUT011P', 'GUT012P', 'GUT013P', 'GUT014P', 'GUT015P', 'GUT016P', 
+            'GUT017P', 'GUT018P', 'GUT019P', 'GUT020P', 'GUT021P', 'GUT022P', 'GUT023P', 'GUT024P', 'GUT025P', 
+            'GUT026P', 'GUT027P', 'GUT028P', 'GUT029P', 'GUT030P']
+        self.pos_file_ok = ['GUT009P.ok', 'GUT010P.ok', 'GUT011P.ok', 'GUT012P.ok', 'GUT013P.ok', 'GUT014P.ok', 'GUT015P.ok', 'GUT016P.ok', 
+            'GUT017P.ok', 'GUT018P.ok', 'GUT019P.ok', 'GUT020P.ok', 'GUT021P.ok', 'GUT022P.ok', 'GUT023P.ok', 'GUT024P.ok', 'GUT025P.ok', 
+            'GUT026P.ok', 'GUT027P.ok', 'GUT028P.ok', 'GUT029P.ok', 'GUT030P.ok']
+        
+
+    def check_data(self, file):
+        # file_dat = [x for x in file if x in self.pos_file]
+        # file_ok = [x for x in file if x not in self.pos_file_ok]
+        if file[:7] in self.pos_file:
+            return True
+        return super(PosSaleFTPController, self).check_data(file)
+
+    def check_trigger_data(self, files):
+        # res = [x for x in files if x in self.pos_file_ok]
+        # if res:
+        return True
+        # return super(PosSaleFTPController, self).check_trigger_data(files)
+
+    def normalize_data(self, local_path_normalize, path):
+        logging.info ('Normalize Data')
+        tic = time.perf_counter()
+        # times = self.get_time_from_file(str(path)[23:30])
+        times = ''
+        create_date = datetime.now(tz=tz_tokyo).strftime('%Y-%m-%d %H:%M:%S')
+        
+        with open(path, 'rb') as file_path, open(local_path_normalize, 'w') as file_encod:
+            lines = file_path.readlines()
+            for line in lines:
+                # line = line.replace(b',', b' ')
+                line = line.replace(b'\x00', b' ')
+                line = line.replace(b'\x8f', b'')
+                date_start = str(line[15:23].decode('shift_jisx0213'))
+                time_start = str(line[24:30].decode('shift_jisx0213').replace(' ','')).zfill(6)
+                date_time_start = datetime.strptime(date_start + time_start, '%Y%m%d%H%M%S') - timedelta(hours=9)
+                transaction_datetime = date_time_start.strftime('%Y-%m-%d %H:%M:%S')
+
+                # new_line = line[0:4] + b'\x2C' + line[4:5] + b'\x2C' + line[5:9] + b'\x2C' + line[9:10] + b'\x2C' + line[10:14] + b'\x2C' + line[14:15] + b'\x2C' + \
+                #             line[15:23] + b'\x2C' + line[23:24] + b'\x2C' + line[24:30] + b'\x2C' + line[30:31] + b'\x2C' + line[31:32] + b'\x2C' + line[32:33] + b'\x2C' + \
+                #             line[33:34] + b'\x2C' + line[34:35] + b'\x2C' + line[35:39] + b'\x2C' + line[39:40] + b'\x2C' + line[40:44] + b'\x2C' + line[44:45] + b'\x2C' + \
+                #             line[45:53] + b'\x2C' + line[53:54] + b'\x2C' + line[54:63] + b'\x2C' + line[63:64] + b'\x2C' + line[64:69] + b'\x2C' + line[69:70] + b'\x2C' + \
+                #             line[70:71] + b'\x2C' + line[71:72] + b'\x2C' + line[72:74] + b'\x2C' + line[74:75] + b'\x2C' + line[75:77] + b'\x2C' + line[77:78] + b'\x2C' + \
+                #             line[78:79] + b'\x2C' + line[79:80] + b'\x2C' + line[80:93] + b'\x2C' + line[93:94] + b'\x2C' + line[94:95] + b'\x2C' + line[95:96] + b'\x2C' + \
+                #             line[96:103] + b'\x2C' + line[103:104] + b'\x2C' + line[104:108] + b'\x2C' + line[108:109] + b'\x2C' + line[109:122] + b'\x2C' + line[122:123] + b'\x2C' + \
+                #             line[123:124] + b'\x2C' + line[124:125] + b'\x2C' + line[125:126] + b'\x2C' + line[126:127] + b'\x2C' + line[127:129] + b'\x2C' + line[129:130] + b'\x2C' + \
+                #             line[130:131] + b'\x2C' + line[131:132] + b'\x2C' + line[132:136] + b'\x2C' + line[136:137] + b'\x2C' + line[137:141] + b'\x2C' + line[141:142] + b'\x2C' + \
+                #             line[142:149] + b'\x2C' + line[149:150] + b'\x2C' + line[150:154] + b'\x2C' + line[154:155] + b'\x2C' + line[155:164] + b'\x2C' + line[164:165] + b'\x2C' + \
+                #             line[165:169] + b'\x2C' + line[169:170] + b'\x2C' + line[170:177] + b'\x2C' + line[177:178] + b'\x2C' + line[178:182] + b'\x2C' + line[182:183] + b'\x2C' + \
+                #             line[183:192] + b'\x2C' + line[192:193] + b'\x2C' + line[193:197] + b'\x2C' + line[197:198] + b'\x2C' + line[198:205] + b'\x2C' + line[205:206] + b'\x2C' + \
+                #             line[206:210] + b'\x2C' + line[210:211] + b'\x2C' + line[211:220] + b'\x2C' + line[220:221] + b'\x2C' + line[221:222] + b'\x2C' + line[222:223] + b'\x2C' + \
+                #             line[223:224] + b'\x2C' + line[224:225] + b'\x2C' + line[225:235] + b'\x2C' + line[235:236] + b'\x2C' + line[236:246] + b'\x2C' + line[246:247] + b'\x2C' + \
+                #             line[247:257] + b'\x2C' + line[257:258] + b'\x2C' + line[258:268] + b'\x2C' + line[268:269] + b'\x2C' + line[269:279] + b'\x2C' + line[279:280] + b'\x2C' + \
+                #             line[280:290] + b'\x2C' + line[290:291] + b'\x2C' + line[291:301] + b'\x2C' + line[301:302] + b'\x2C' + line[302:312] + b'\x2C' + line[312:313] + b'\x2C' + \
+                #             line[313:323] + b'\x2C' + line[323:324] + b'\x2C' + line[324:325] + b'\x2C' + line[325:326] + b'\x2C' + line[326:346] + b'\x2C' + line[346:347] + b'\x2C' + \
+                #             line[347:356] + b'\x2C' + line[356:357] + b'\x2C' + line[357:365] + b'\x2C' + line[365:366] + b'\x2C' + line[366:370] + b'\x2C' + line[370:371] + b'\x2C' + \
+                #             line[371:372] + b'\x2C' + line[372:373] + b'\x2C' + line[373:375] + b'\x2C' + line[375:376] + b'\x2C' + line[376:378] + b'\x2C' + line[378:379] + b'\x2C' + \
+                #             line[379:380] + b'\x2C' + line[380:381]
+                new_line = line.decode('shift_jisx0213').replace('\n','') + ',,' + str(path)[23:50] + ',' + create_date + ',' + times + ',' + transaction_datetime
+
+                # product_code_replace = new_line[112:125].replace(' ','')
+                product_code_replace = new_line.split(',')[16].replace(' ','')
+                product_code_zfill = product_code_replace.zfill(13)
+                val_upce_to_upca = self.convert_UPCE_to_UPCA(product_code_zfill[-6:])
+
+                # code_41 = new_line[149:162][-7:]
+                code_41 = new_line.split(',')[20][-7:]
+                code_upc1 = '0' + product_code_zfill
+                code_33 = product_code_zfill[-7:]
+
+                # query_code_class_replace = new_line[132:139].replace(' ','')
+                query_code_class_replace = new_line.split(',')[18].replace(' ','')
+                query_code_class_zfill = query_code_class_replace.zfill(4) + '000'
+                class_code = query_code_class_zfill.zfill(7)
+
+                if new_line.split(',')[0] == '0000' and new_line.split(',')[13] == '10':
+                    file_encod.write(new_line + ',' + val_upce_to_upca + ',' + code_41 + ',' + code_upc1 + ',' + code_33 + ',' + class_code + ',t\n')
+                else:
+                    file_encod.write(new_line + ',,,,,,f\n')
+                # file_encod.write(new_line + '\n')
+                    
+            file_path.close()
+            file_encod.close()
+        toc = time.perf_counter()
+        logging.info(f"Normalize Data in {toc - tic:0.4f} seconds")
+        logging.info ('Normalize is Done')
+    
+    # def get_time_from_file(self, filename):
+    #     if filename == 'GUT009P':
+    #         result = '060000'
+    #     elif filename == 'GUT010P':
+    #         result = '070000'
+    #     elif filename == 'GUT011P':
+    #         result = '080000'
+    #     elif filename == 'GUT012P':
+    #         result = '090000'
+    #     elif filename == 'GUT013P':
+    #         result = '100000'
+    #     elif filename == 'GUT014P':
+    #         result = '110000'
+    #     elif filename == 'GUT015P':
+    #         result = '120000'
+    #     elif filename == 'GUT016P':
+    #         result = '130000'
+    #     elif filename == 'GUT017P':
+    #         result = '140000'
+    #     elif filename == 'GUT018P':
+    #         result = '150000'
+    #     elif filename == 'GUT019P':
+    #         result = '160000'
+    #     elif filename == 'GUT020P':
+    #         result = '170000'
+    #     elif filename == 'GUT021P':
+    #         result = '180000'
+    #     elif filename == 'GUT022P':
+    #         result = '190000'
+    #     elif filename == 'GUT023P':
+    #         result = '200000'
+    #     elif filename == 'GUT024P':
+    #         result = '210000'
+    #     elif filename == 'GUT025P':
+    #         result = '220000'
+    #     elif filename == 'GUT026P':
+    #         result = '230000'
+    #     elif filename == 'GUT027P':
+    #         result = '240000'
+    #     elif filename == 'GUT028P':
+    #         result = '010000'
+    #     elif filename == 'GUT029P':
+    #         result = '020000'
+    #     elif filename == 'GUT030P':
+    #         result = '030000'
+    #     else:
+    #         result = '240000'
+    #     return result
+
+    async def integration_checklist_update_2(self, file):
+        logging.info ('Integration Checklist Update 2')
+        # config = configuration.config()
+        # conn = await asyncpg.connect(user=config['MIDDLEWARE_DB']['username'], password=config['MIDDLEWARE_DB']['passwd'],
+        #                     database=config['MIDDLEWARE_DB']['database'],
+        #                     host=config['MIDDLEWARE_DB']['url'], port=config['MIDDLEWARE_DB']['port'])
+
+        # BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+        # load_dotenv(os.path.join(BASE_DIR, "middleware_controller/.env"))
+
+        # integration_checklist_etl_store_file = os.environ['INTEGRATION_CHECKLIST_ETL_STORE_FILE']
+        # await self.execute_sql_file(BASE_DIR + integration_checklist_etl_store_file, conn)
+        
+        # await conn.execute("""UPDATE maruetsu_checklist_daily_update_2_notification SET filename_with_suffix = $1, 
+        #                         middleware_table = $2
+        #                     WHERE unique_key_action = 'maruetsu_checklist_daily_update_2_notification'""",
+        #                     file, 'maruetsu_pos_sales')
+
+        await conn.close()
+
+# ================================================================
+# FUNCTION UPCE TO UPCA
+# ================================================================
+    def calc_check_digit(self, value):
+        check_digit=0
+        odd_pos=True
+        for char in str(value)[::-1]:
+            if odd_pos:
+                check_digit+=int(char)*3
+            else:
+                check_digit+=int(char)
+            odd_pos=not odd_pos
+        check_digit=check_digit % 10
+        check_digit=10-check_digit
+        check_digit=check_digit % 10
+        return check_digit
+
+    def convert_UPCE_to_UPCA(self, upce_value): # YANG DI PANGGIL DAN KASI PARAMETER
+        middle_digits = ''
+        mfrnum = ''
+        itemnum = ''
+        if len(upce_value)==6:
+            middle_digits=upce_value
+        elif len(upce_value)==7:
+            middle_digits=upce_value[:6]
+        elif len(upce_value)==8:
+            middle_digits=upce_value[1:7]
+        else:
+            return False
+
+        d1,d2,d3,d4,d5,d6=list(middle_digits)
+        if d6 in ["0","1","2"]:
+            mfrnum=d1+d2+d6+"00"
+            itemnum="00"+d3+d4+d5
+        elif d6=="3":
+            mfrnum=d1+d2+d3+"00"
+            itemnum="000"+d4+d5                
+        elif d6=="4":
+            mfrnum=d1+d2+d3+d4+"0"
+            itemnum="0000"+d5        
+        else:
+            mfrnum=d1+d2+d3+d4+d5
+            itemnum="0000"+d6
+
+        newmsg="0"+mfrnum+itemnum
+        check_digit=self.calc_check_digit(newmsg)
+
+        return newmsg+str(check_digit)
+

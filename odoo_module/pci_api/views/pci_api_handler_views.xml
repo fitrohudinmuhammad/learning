@@ -1,0 +1,67 @@
+<odoo>
+    <record id="pci_api_handler_form_view" model="ir.ui.view">
+        <field name="name">pci_api_handler_form_view</field>
+        <field name="model">pci.api.handler</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="button_generate_new_key" type="object" string="Generate New Key" class="oe_highlight"/>
+                    <button type="object" name="toggle_active" string="Deactive" attrs="{'invisible': [('active', '=', False)]}"/>
+                    <button type="object" name="toggle_active" string="Active" attrs="{'invisible': [('active', '=', True)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="encrypt_salt" invisible="1"/>
+                        <field name="root_user"/>
+                        <field name="manual_key"/>
+                        <field name="user_id" attrs="{'invisible': [('root_user', '=', True)], 'required': [('root_user', '=', False)]}"/>
+                        <field name="active" invisible="1"/>
+                        <!-- <field name="expired_date"/> -->
+                        <field name="incoming_api_key" attrs="{'readonly': [('manual_key', '=', False)]}"/>
+                    </group>
+                    <group>
+                        <field name="access_all_endpoints" />
+                        <field name="endpoints" attrs="{'invisible': [('access_all_endpoints', '=', True)]}" />
+                    </group>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers" />
+                    <field name="message_ids" widget="mail_thread" />
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <record id="pci_api_handler_tree_view" model="ir.ui.view">
+        <field name="name">pci_api_handler_tree_view</field>
+        <field name="model">pci.api.handler</field>
+        <field name="arch" type="xml">
+            <tree string="API Configuration">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="incoming_api_key"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="pci_api_handler_search_view" model="ir.ui.view">
+        <field name="name">pci_api_handler_search_view</field>
+        <field name="model">pci.api.handler</field>
+        <field name="arch" type="xml">
+            <search string="API Configuration Filter">
+                <field name="name" filter_domain="[('name', 'ilike', self)]"/>
+                <field name="user_id"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Root API" name="root_api" domain="[('root_user', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_pci_api_handler_configuration" model="ir.actions.act_window">
+        <field name="name">API Configuration</field>
+        <field name="res_model">pci.api.handler</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>
